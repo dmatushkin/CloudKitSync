@@ -1,3 +1,3 @@
 # CloudKitSync
 
-A description of this package.
+A library to sync CoreData models with iCloud
