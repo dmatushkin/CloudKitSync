@@ -31,7 +31,7 @@ struct FetchRecordsTestPublisher: Publisher {
 
 		func request(_ demand: Subscribers.Demand) {
 			guard let subscriber = subscriber else { return }
-			CloudKitSyncUtilsStub.operationsQueue.async { [weak self] in
+			CloudKitSyncUtilsStub.operationsQueue.asyncAfter(deadline: .now() + 0.1) { [weak self] in
                 guard let self = self else { fatalError() }
 				SwiftyBeaver.debug("about to fetch records \(self.recordIds)")
 				let result = self.onFetchRecords(self.recordIds, self.localDb)
@@ -91,7 +91,7 @@ struct UpdateRecordsTestPublisher: Publisher {
 
 		func request(_ demand: Subscribers.Demand) {
 			guard let subscriber = subscriber else { return }
-			CloudKitSyncUtilsStub.operationsQueue.async { [weak self] in
+			CloudKitSyncUtilsStub.operationsQueue.asyncAfter(deadline: .now() + 0.1) { [weak self] in
                 guard let self = self else { fatalError() }
 				SwiftyBeaver.debug("about to update records \(self.records)")
 				if let error = self.onUpdateRecords(self.records, self.localDb) {
@@ -148,7 +148,7 @@ struct UpdateSubscriptionsTestPublisher: Publisher {
 
 		func request(_ demand: Subscribers.Demand) {
 			guard let subscriber = subscriber else { return }
-			CloudKitSyncUtilsStub.operationsQueue.async { [weak self] in
+			CloudKitSyncUtilsStub.operationsQueue.asyncAfter(deadline: .now() + 0.1) { [weak self] in
                 guard let self = self else { fatalError() }
 				SwiftyBeaver.debug("about to update subscriptions \(self.subscriptions)")
 				if let error = self.onUpdateSubscriptions(self.subscriptions, self.localDb) {
@@ -204,7 +204,7 @@ struct FetchDatabaseChangesTestPublisher: Publisher {
 
 		func request(_ demand: Subscribers.Demand) {
 			guard let subscriber = subscriber else { return }
-			CloudKitSyncUtilsStub.operationsQueue.async { [weak self] in
+			CloudKitSyncUtilsStub.operationsQueue.asyncAfter(deadline: .now() + 0.1) { [weak self] in
                 guard let self = self else { fatalError() }
                 SwiftyBeaver.debug("about to fetch database changes")
 				let result = self.onFetchDatabaseChanges(self.localDb)
@@ -258,7 +258,7 @@ struct FetchZoneChangesTestPublisher: Publisher {
 
 		func request(_ demand: Subscribers.Demand) {
 			guard let subscriber = subscriber else { return }
-			CloudKitSyncUtilsStub.operationsQueue.async { [weak self] in
+			CloudKitSyncUtilsStub.operationsQueue.asyncAfter(deadline: .now() + 0.1) { [weak self] in
                 guard let self = self else { fatalError() }
 				SwiftyBeaver.debug("about to fetch zone changes \(self.zoneIds)")
 				let result = self.onFetchZoneChanges(self.zoneIds)
@@ -312,7 +312,7 @@ struct CloudKitAcceptShareTestPublisher: Publisher {
 		func request(_ demand: Subscribers.Demand) {
 			guard let subscriber = subscriber else { return }
 
-			CloudKitSyncUtilsStub.operationsQueue.async { [weak self] in
+			CloudKitSyncUtilsStub.operationsQueue.asyncAfter(deadline: .now() + 0.1) { [weak self] in
 				guard let self = self else { fatalError() }
 				SwiftyBeaver.debug("about to accept share \(self.metadata)")
 				let result = self.onAcceptShare(self.metadata)

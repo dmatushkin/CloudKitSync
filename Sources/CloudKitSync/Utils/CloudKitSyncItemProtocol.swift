@@ -30,9 +30,8 @@ public protocol CloudKitSyncItemProtocol: class {
 extension CloudKitSyncItemProtocol {
 
 	func mapTo<T>(type: T.Type) -> AnyPublisher<T, Error> where T: CloudKitSyncItemProtocol {
-		let value = self
-		return Future { promise in
-			if let result = value as? T {
+		return Future {[weak self] promise in
+			if let result = self as? T {
 				return promise(.success(result))
 			} else {
 				return promise(.failure(CommonError(description: "Unable to map item") as Error))
@@ -41,12 +40,15 @@ extension CloudKitSyncItemProtocol {
 	}
 
 	func setParent(item: CloudKitSyncItemProtocol?) -> AnyPublisher<CloudKitSyncItemProtocol, Error> {
-		let value = self
 		if let parent = item {
 			return self.setParent(item: parent)
 		} else {
-			return Future { promise in
-				return promise(.success(value))
+			return Future {[weak self] promise in
+				if let value = self {
+					return promise(.success(value))
+				} else {
+					return promise(.failure(CommonError(description: "Unable to set parent") as Error))
+				}
 			}.eraseToAnyPublisher()
 		}
 	}

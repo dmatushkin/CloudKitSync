@@ -219,7 +219,7 @@ class CloudKitSyncLoaderTests: XCTestCase {
 			let listRecord1 = CKRecord(recordType: TestShoppingList.recordType, recordID: CKRecord.ID(recordName: "testListRecord1", zoneID: zoneIds[0]))
 			let listItem11 = CKRecord(recordType: TestShoppingItem.recordType, recordID: CKRecord.ID(recordName: "testItemRecord11", zoneID: zoneIds[0]))
 			let listItem12 = CKRecord(recordType: TestShoppingItem.recordType, recordID: CKRecord.ID(recordName: "testItemRecord12", zoneID: zoneIds[0]))
-			listRecord1["name"] = "Test Shopping List"
+			listRecord1["name"] = "Test Shopping List 1"
 			listRecord1["date"] = Date(timeIntervalSinceReferenceDate: 602175855.0)
 			listRecord1["items"] = [CKRecord.Reference(recordID: listItem11.recordID, action: .none), CKRecord.Reference(recordID: listItem12.recordID, action: .none)]
 			listItem11["goodName"] = "Test good 11"
@@ -249,12 +249,12 @@ class CloudKitSyncLoaderTests: XCTestCase {
 			return ([listRecord1, listItem11, listItem12, listRecord2, listItem21, listItem22, listRecord3], nil)
 		}
 
-		let shoppingLists = try self.cloudLoader.fetchChanges(localDb: true, itemType: TestShoppingList.self).getValue(test: self, timeout: 10)
+		let shoppingLists = try self.cloudLoader.fetchChanges(localDb: true, itemType: TestShoppingList.self).getValue(test: self, timeout: 10).sorted(by: { ($0.name ?? "") < ($1.name ?? "") })
 		let items1 = shoppingLists[0].items.sorted(by: {($0.goodName ?? "") < ($1.goodName ?? "")})
 		let items2 = shoppingLists[1].items.sorted(by: {($0.goodName ?? "") < ($1.goodName ?? "")})
 		let items3 = shoppingLists[2].items
 		XCTAssertEqual(shoppingLists.count, 3)
-		XCTAssertEqual(shoppingLists[0].name, "Test Shopping List")
+		XCTAssertEqual(shoppingLists[0].name, "Test Shopping List 1")
         XCTAssertEqual(shoppingLists[0].ownerName, "testOwner")
         XCTAssertEqual(shoppingLists[0].recordId, "testListRecord1")
         XCTAssertTrue(!shoppingLists[0].isRemote)
@@ -271,12 +271,16 @@ class CloudKitSyncLoaderTests: XCTestCase {
         XCTAssertEqual(shoppingLists[2].date, 602175855.0)
 		XCTAssertEqual(items1[0].goodName, "Test good 11")
 		XCTAssertEqual(items1[0].storeName, "Test store 11")
+		XCTAssertEqual(items1[0].recordId, "testItemRecord11")
 		XCTAssertEqual(items1[1].goodName, "Test good 12")
 		XCTAssertEqual(items1[1].storeName, "Test store 12")
+		XCTAssertEqual(items1[1].recordId, "testItemRecord12")
 		XCTAssertEqual(items2[0].goodName, "Test good 21")
 		XCTAssertEqual(items2[0].storeName, "Test store 21")
+		XCTAssertEqual(items2[0].recordId, "testItemRecord21")
 		XCTAssertEqual(items2[1].goodName, "Test good 22")
 		XCTAssertEqual(items2[1].storeName, "Test store 22")
+		XCTAssertEqual(items2[1].recordId, "testItemRecord22")
 		XCTAssertEqual(items1.count, 2)
 		XCTAssertEqual(items2.count, 2)
 		XCTAssertEqual(items3.count, 0)

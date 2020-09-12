@@ -10,6 +10,7 @@ import Foundation
 import CloudKitSync
 import Combine
 import CloudKit
+import CommonError
 
 class TestShareMetadata: CKShare.Metadata {
 
@@ -27,6 +28,8 @@ class SharedRecord: CKRecord {
     }
 }
 
+let modelOperationsQueue = DispatchQueue(label: "CloudKitSyncItemProtocol.modelOperationsQueue")
+
 class TestShoppingList: CloudKitSyncItemProtocol {
 
 	var items = [TestShoppingItem]()
@@ -37,6 +40,7 @@ class TestShoppingList: CloudKitSyncItemProtocol {
 	func appendItem(item: TestShoppingItem) {
 		if !items.contains(item) {
 			items.append(item)
+			print("Setting \(item.recordId ?? "no record") as a dependent to \(self.recordId ?? "no record"), \(items.count) total")
 		}
 	}
 
@@ -69,30 +73,36 @@ class TestShoppingList: CloudKitSyncItemProtocol {
 	var recordId: String?
 
 	func setRecordId(_ recordId: String) -> AnyPublisher<CloudKitSyncItemProtocol, Error> {
-		self.recordId = recordId
-		return Future {[unowned self] promise in
-			return promise(.success(self))
+		return Future { promise in
+			modelOperationsQueue.asyncAfter(deadline: .now() + 0.1) {[unowned self] in
+				self.recordId = recordId
+				promise(.success(self))
+			}
 		}.eraseToAnyPublisher()
 	}
 
 	func populate(record: CKRecord) -> AnyPublisher<CKRecord, Error> {
-		record["name"] = name
-		record["date"] = Date(timeIntervalSinceReferenceDate: date)
 		return Future { promise in
-			return promise(.success(record))
+			modelOperationsQueue.asyncAfter(deadline: .now() + 0.1) {[unowned self] in
+				record["name"] = self.name
+				record["date"] = Date(timeIntervalSinceReferenceDate: self.date)
+				promise(.success(record))
+			}
 		}.eraseToAnyPublisher()
 	}
 
 	static func store(record: CKRecord, isRemote: Bool) -> AnyPublisher<CloudKitSyncItemProtocol, Error> {
 		return Future { promise in
-			let list = TestShoppingList()
-			list.recordId = record.recordID.recordName
-			list.ownerName = record.recordID.zoneID.ownerName
-			list.isRemote = isRemote
-			list.name = record["name"] as? String
-			let date = record["date"] as? Date ?? Date()
-			list.date = date.timeIntervalSinceReferenceDate
-			return promise(.success(list))
+			modelOperationsQueue.asyncAfter(deadline: .now() + 0.1) {
+				let list = TestShoppingList()
+				list.recordId = record.recordID.recordName
+				list.ownerName = record.recordID.zoneID.ownerName
+				list.isRemote = isRemote
+				list.name = record["name"] as? String
+				let date = record["date"] as? Date ?? Date()
+				list.date = date.timeIntervalSinceReferenceDate
+				promise(.success(list))
+			}
 		}.eraseToAnyPublisher()
 	}
 
@@ -140,36 +150,44 @@ class TestShoppingItem: CloudKitSyncItemProtocol, Equatable {
 	var recordId: String?
 
 	func setRecordId(_ recordId: String) -> AnyPublisher<CloudKitSyncItemProtocol, Error> {
-		self.recordId = recordId
-		return Future {[unowned self] promise in
-			return promise(.success(self))
+		return Future { promise in
+			modelOperationsQueue.asyncAfter(deadline: .now() + 0.1) {[unowned self] in
+				self.recordId = recordId
+				promise(.success(self))
+			}
 		}.eraseToAnyPublisher()
 	}
 
 	func populate(record: CKRecord) -> AnyPublisher<CKRecord, Error> {
-		record["goodName"] = goodName
-		record["storeName"] = storeName
 		return Future { promise in
-			return promise(.success(record))
+			modelOperationsQueue.asyncAfter(deadline: .now() + 0.1) {[unowned self] in
+				record["goodName"] = self.goodName
+				record["storeName"] = self.storeName
+				promise(.success(record))
+			}
 		}.eraseToAnyPublisher()
 	}
 
 	static func store(record: CKRecord, isRemote: Bool) -> AnyPublisher<CloudKitSyncItemProtocol, Error> {
 		return Future { promise in
-			let item = TestShoppingItem()
-			item.recordId = record.recordID.recordName
-			item.ownerName = record.recordID.zoneID.ownerName
-			item.isRemote = isRemote
-			item.goodName = record["goodName"] as? String
-			item.storeName = record["storeName"] as? String
-			return promise(.success(item))
+			modelOperationsQueue.asyncAfter(deadline: .now() + 0.1) {
+				let item = TestShoppingItem()
+				item.recordId = record.recordID.recordName
+				item.ownerName = record.recordID.zoneID.ownerName
+				item.isRemote = isRemote
+				item.goodName = record["goodName"] as? String
+				item.storeName = record["storeName"] as? String
+				promise(.success(item))
+			}
 		}.eraseToAnyPublisher()
 	}
 
 	func setParent(item: CloudKitSyncItemProtocol) -> AnyPublisher<CloudKitSyncItemProtocol, Error> {
-		(item as? TestShoppingList)?.appendItem(item: self)
-		return Future {[unowned self] promise in
-			return promise(.success(self))
+		return Future { promise in
+			modelOperationsQueue.asyncAfter(deadline: .now() + 0.1) {
+				(item as? TestShoppingList)?.appendItem(item: self)
+				promise(.success(self))
+			}
 		}.eraseToAnyPublisher()
 	}
 }
