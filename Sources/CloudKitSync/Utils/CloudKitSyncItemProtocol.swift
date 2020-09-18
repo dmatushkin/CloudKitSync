@@ -29,16 +29,6 @@ public protocol CloudKitSyncItemProtocol: class {
 
 extension CloudKitSyncItemProtocol {
 
-	func mapTo<T>(type: T.Type) -> AnyPublisher<T, Error> where T: CloudKitSyncItemProtocol {
-		return Future {[weak self] promise in
-			if let result = self as? T {
-				return promise(.success(result))
-			} else {
-				return promise(.failure(CommonError(description: "Unable to map item") as Error))
-			}
-		}.eraseToAnyPublisher()
-	}
-
 	func setParent(item: CloudKitSyncItemProtocol?) -> AnyPublisher<CloudKitSyncItemProtocol, Error> {
 		if let parent = item {
 			return self.setParent(item: parent)

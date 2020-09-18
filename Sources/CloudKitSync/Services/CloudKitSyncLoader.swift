@@ -30,8 +30,14 @@ public final class CloudKitSyncLoader: CloudKitSyncLoaderProtocol, DIDependency 
 			return self.cloudKitUtils.fetchRecords(recordIds: [metadata.rootRecordID], localDb: false)
 		}).flatMap({[unowned self] record in
 			self.storeRecord(record: record, itemType: itemType, parent: nil)
-		}).flatMap({ item in
-			item.mapTo(type: T.self)
+		}).flatMap({ item -> AnyPublisher<T, Error> in
+			return Future { promise in
+				if let result = item as? T {
+					return promise(.success(result))
+				} else {
+					return promise(.failure(CommonError(description: "Unable to map item") as Error))
+				}
+			}.eraseToAnyPublisher()
 		}).eraseToAnyPublisher()
 	}
 
