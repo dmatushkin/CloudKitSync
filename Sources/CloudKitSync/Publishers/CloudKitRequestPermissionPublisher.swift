@@ -17,10 +17,10 @@ struct CloudKitRequestPermissionPublisher: Publisher {
 
 		@Autowired
 		private var operations: CloudKitSyncOperationsProtocol
-		private let permission: CKContainer_Application_Permissions
+		private let permission: CKContainer.ApplicationPermissions
 		private var subscriber: S?
 
-		init(permission: CKContainer_Application_Permissions, subscriber: S) {
+		init(permission: CKContainer.ApplicationPermissions, subscriber: S) {
 			self.permission = permission
 			self.subscriber = subscriber
 		}
@@ -44,9 +44,9 @@ struct CloudKitRequestPermissionPublisher: Publisher {
 
 	typealias Output = CKContainer_Application_PermissionStatus
 	typealias Failure = Error
-	private let permission: CKContainer_Application_Permissions
+	private let permission: CKContainer.ApplicationPermissions
 
-	init(permission: CKContainer_Application_Permissions) {
+	init(permission: CKContainer.ApplicationPermissions) {
 		self.permission = permission
 	}
 

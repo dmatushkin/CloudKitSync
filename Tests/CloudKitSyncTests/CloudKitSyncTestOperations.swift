@@ -20,8 +20,8 @@ class CloudKitSyncTestOperations: CloudKitSyncOperationsProtocol {
     var onAddOperation: ((CKDatabaseOperation, [CKDatabaseOperation], [CKDatabaseOperation]) -> Void)?
 	var onContainerOperation: ((CKOperation, [CKOperation]) -> Void)?
 	var onAccountStatus: (() -> (CKAccountStatus, Error?))?
-	var onPermissionStatus: ((CKContainer_Application_Permissions) -> (CKContainer_Application_PermissionStatus, Error?))?
-	var onRequestAppPermission: ((CKContainer_Application_Permissions) -> (CKContainer_Application_PermissionStatus, Error?))?
+	var onPermissionStatus: ((CKContainer.ApplicationPermissions) -> (CKContainer_Application_PermissionStatus, Error?))?
+	var onRequestAppPermission: ((CKContainer.ApplicationPermissions) -> (CKContainer_Application_PermissionStatus, Error?))?
 	var onSaveZone: ((CKRecordZone) -> (CKRecordZone?, Error?))?
 
     func cleanup() {
@@ -56,7 +56,7 @@ class CloudKitSyncTestOperations: CloudKitSyncOperationsProtocol {
 		}
 	}
 
-	func permissionStatus(forApplicationPermission applicationPermission: CKContainer_Application_Permissions, completionHandler: @escaping CKContainer_Application_PermissionBlock) {
+	func permissionStatus(forApplicationPermission applicationPermission: CKContainer.ApplicationPermissions, completionHandler: @escaping CKContainer.ApplicationPermissionBlock) {
 		self.operationsQueue.asyncAfter(deadline: .now() + 0.1) {[weak self] in
 			guard let self = self, let onPermissionStatus = self.onPermissionStatus else { return }
 			let (status, error) = onPermissionStatus(applicationPermission)
@@ -64,7 +64,7 @@ class CloudKitSyncTestOperations: CloudKitSyncOperationsProtocol {
 		}
 	}
 
-	func requestApplicationPermission(_ applicationPermission: CKContainer_Application_Permissions, completionHandler: @escaping CKContainer_Application_PermissionBlock) {
+	func requestApplicationPermission(_ applicationPermission: CKContainer.ApplicationPermissions, completionHandler: @escaping CKContainer.ApplicationPermissionBlock) {
 		self.operationsQueue.asyncAfter(deadline: .now() + 0.1) {[weak self] in
 			guard let self = self, let onPermissionStatus = self.onRequestAppPermission else { return }
 			let (status, error) = onPermissionStatus(applicationPermission)

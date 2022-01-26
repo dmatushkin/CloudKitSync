@@ -15,7 +15,7 @@ import CommonError
 
 //swiftlint:disable type_body_length function_body_length superfluous_disable_command
 
-class CloudKitSyncLoaderTests: XCTestCase {
+/*class CloudKitSyncLoaderTests: XCTestCase {
 
 	static var allTests = [
         ("testLoadShare", testLoadShare),
@@ -410,3 +410,4 @@ class CloudKitSyncLoaderTests: XCTestCase {
 		XCTAssertEqual(operationsCounter, 2)
 	}
 }
+*/

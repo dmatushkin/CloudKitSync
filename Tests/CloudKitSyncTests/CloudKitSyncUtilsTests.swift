@@ -34,7 +34,6 @@ class CloudKitSyncUtilsTests: XCTestCase {
 		("testFetchDatabaseChangesCombineRetry", testFetchDatabaseChangesCombineRetry),
 		("testFetchDatabaseChangesCombineTokenReset", testFetchDatabaseChangesCombineTokenReset),
 		("testFetchDatabaseChangesCombineFail", testFetchDatabaseChangesCombineFail),
-		("testFetchDatabaseChangesCombineNoTokenError", testFetchDatabaseChangesCombineNoTokenError),
 		("testFetchZoneChangesCombineSuccessNoTokenNoMore", testFetchZoneChangesCombineSuccessNoTokenNoMore),
 		("testFetchZoneChangesCombineSuccessNoZones", testFetchZoneChangesCombineSuccessNoZones),
 		("testFetchZoneChangesCombineSuccessHasTokenNoMore", testFetchZoneChangesCombineSuccessHasTokenNoMore),
@@ -59,105 +58,105 @@ class CloudKitSyncUtilsTests: XCTestCase {
         self.storage.cleanup()
         self.utils = nil
     }
-
-	func testFetchLocalRecordsCombineSuccess() throws {
+    
+    func testFetchLocalRecordsCombineSuccess() async throws {
         let recordIds = [CKRecord.ID(recordName: "aaaa"), CKRecord.ID(recordName: "bbbb"), CKRecord.ID(recordName: "cccc")]
         self.operations.onAddOperation = { operation, localOperations, sharedOperations in
             XCTAssertEqual((operation as? CKFetchRecordsOperation)?.recordIDs?.elementsEqual(recordIds), true)
             for recordId in recordIds {
                 let record = CKRecord(recordType: CKRecord.RecordType("testDataRecord"), recordID: recordId)
-                (operation as? CKFetchRecordsOperation)?.perRecordCompletionBlock?(record, recordId, nil)
+                (operation as? CKFetchRecordsOperation)?.perRecordResultBlock?(recordId, .success(record))
             }
-            (operation as? CKFetchRecordsOperation)?.fetchRecordsCompletionBlock?([:], nil)
+            (operation as? CKFetchRecordsOperation)?.fetchRecordsResultBlock?(.success(()))
         }
-		let records = try self.utils.fetchRecords(recordIds: recordIds, localDb: true).collect().getValue(test: self, timeout: 10)
+        let records = try await self.utils.fetchRecords(recordIds: recordIds, localDb: true)
         XCTAssertEqual(records.count, 3)
         XCTAssertEqual(records[0].recordID.recordName, "aaaa")
         XCTAssertEqual(records[1].recordID.recordName, "bbbb")
         XCTAssertEqual(records[2].recordID.recordName, "cccc")
     }
+    
+    func testFetchLocalRecordsCombineSuccessNoRecords() async throws {
+        let records = try await self.utils.fetchRecords(recordIds: [], localDb: true)
+        XCTAssertEqual(records.count, 0)
+    }
 
-	func testFetchLocalRecordsCombineSuccessNoRecords() throws {
-		let records = try self.utils.fetchRecords(recordIds: [], localDb: true).collect().getValue(test: self, timeout: 10)
-		XCTAssertEqual(records.count, 0)
-	}
-
-	func testFetchLocalRecordsCombineRetry() throws {
+    func testFetchLocalRecordsCombineRetry() async throws {
         let recordIds = [CKRecord.ID(recordName: "aaaa"), CKRecord.ID(recordName: "bbbb"), CKRecord.ID(recordName: "cccc")]
         self.operations.onAddOperation = { operation, localOperations, sharedOperations in
             XCTAssertEqual((operation as? CKFetchRecordsOperation)?.recordIDs?.elementsEqual(recordIds), true)
             if localOperations.count == 1 {
-                (operation as? CKFetchRecordsOperation)?.fetchRecordsCompletionBlock?([:], CommonError(description: "retry"))
+                (operation as? CKFetchRecordsOperation)?.fetchRecordsResultBlock?(.failure(CommonError(description: "retry")))
             } else {
                 for recordId in recordIds {
                     let record = CKRecord(recordType: CKRecord.RecordType("testDataRecord"), recordID: recordId)
-                    (operation as? CKFetchRecordsOperation)?.perRecordCompletionBlock?(record, recordId, nil)
+                    (operation as? CKFetchRecordsOperation)?.perRecordResultBlock?(recordId, .success(record))
                 }
-                (operation as? CKFetchRecordsOperation)?.fetchRecordsCompletionBlock?([:], nil)
+                (operation as? CKFetchRecordsOperation)?.fetchRecordsResultBlock?(.success(()))
             }
         }
-        let records = try self.utils.fetchRecords(recordIds: recordIds, localDb: true).collect().getValue(test: self, timeout: 10)
+        let records = try await self.utils.fetchRecords(recordIds: recordIds, localDb: true)
         XCTAssertEqual(self.operations.localOperations.count, 2)
         XCTAssertEqual(records.count, 3)
         XCTAssertEqual(records[0].recordID.recordName, "aaaa")
         XCTAssertEqual(records[1].recordID.recordName, "bbbb")
         XCTAssertEqual(records[2].recordID.recordName, "cccc")
     }
-
-	func testFetchLocalRecordsCombinneFail() {
+    
+    func testFetchLocalRecordsCombinneFail() async {
         let recordIds = [CKRecord.ID(recordName: "aaaa"), CKRecord.ID(recordName: "bbbb"), CKRecord.ID(recordName: "cccc")]
         self.operations.onAddOperation = { operation, localOperations, sharedOperations in
-            (operation as? CKFetchRecordsOperation)?.fetchRecordsCompletionBlock?([:], CommonError(description: "fail"))
+            (operation as? CKFetchRecordsOperation)?.fetchRecordsResultBlock?(.failure(CommonError(description: "fail")))
         }
         do {
-            _ = try self.utils.fetchRecords(recordIds: recordIds, localDb: true).collect().getValue(test: self, timeout: 10)
+            _ = try await self.utils.fetchRecords(recordIds: recordIds, localDb: true)
             XCTAssertTrue(false)
         } catch {
             XCTAssertEqual(error.localizedDescription, "fail")
         }
         XCTAssertEqual(self.operations.localOperations.count, 1)
     }
-
-	func testUpdateRecordsCombineSuccess() throws {
+    
+    func testUpdateRecordsCombineSuccess() async throws {
         let records = [CKRecord.ID(recordName: "aaaa"), CKRecord.ID(recordName: "bbbb"), CKRecord.ID(recordName: "cccc")].map({CKRecord(recordType: CKRecord.RecordType("testDataRecord"), recordID: $0)})
         self.operations.onAddOperation = { operation, localOperations, sharedOperations in
             guard let operation = operation as? CKModifyRecordsOperation else { return }
             XCTAssertEqual(operation.recordsToSave?.elementsEqual(records), true)
-            operation.modifyRecordsCompletionBlock?([], [], nil)
+            operation.modifyRecordsResultBlock?(.success(()))
         }
-		try self.utils.updateRecords(records: records, localDb: true).wait(test: self, timeout: 10)
+        try await self.utils.updateRecords(records: records, localDb: true)
         XCTAssertEqual(self.operations.localOperations.count, 1)
     }
-
-	func testUpdateRecordsCombineSuccessNoRecords() throws {
-		try self.utils.updateRecords(records: [], localDb: true).wait(test: self, timeout: 10)
+    
+    func testUpdateRecordsCombineSuccessNoRecords() async throws {
+        try await self.utils.updateRecords(records: [], localDb: true)
         XCTAssertEqual(self.operations.localOperations.count, 0)
     }
-
-	func testUpdateRecordCombineRetry() throws {
+    
+    func testUpdateRecordCombineRetry() async throws {
         let records = [CKRecord.ID(recordName: "aaaa"), CKRecord.ID(recordName: "bbbb"), CKRecord.ID(recordName: "cccc")].map({CKRecord(recordType: CKRecord.RecordType("testDataRecord"), recordID: $0)})
         self.operations.onAddOperation = { operation, localOperations, sharedOperations in
             guard let operation = operation as? CKModifyRecordsOperation else { return }
             XCTAssertEqual(operation.recordsToSave?.elementsEqual(records), true)
             if localOperations.count == 1 {
-                operation.modifyRecordsCompletionBlock?([], [], CommonError(description: "retry"))
+                operation.modifyRecordsResultBlock?(.failure(CommonError(description: "retry")))
             } else {
-                operation.modifyRecordsCompletionBlock?([], [], nil)
+                operation.modifyRecordsResultBlock?(.success(()))
             }
         }
-        try self.utils.updateRecords(records: records, localDb: true).wait(test: self, timeout: 10)
+        try await self.utils.updateRecords(records: records, localDb: true)
         XCTAssertEqual(self.operations.localOperations.count, 2)
     }
-
-	func testUpdateRecordsCombineFail() {
+    
+    func testUpdateRecordsCombineFail() async {
         let records = [CKRecord.ID(recordName: "aaaa"), CKRecord.ID(recordName: "bbbb"), CKRecord.ID(recordName: "cccc")].map({CKRecord(recordType: CKRecord.RecordType("testDataRecord"), recordID: $0)})
         self.operations.onAddOperation = { operation, localOperations, sharedOperations in
             guard let operation = operation as? CKModifyRecordsOperation else { return }
             XCTAssertEqual(operation.recordsToSave?.elementsEqual(records), true)
-            operation.modifyRecordsCompletionBlock?([], [], CommonError(description: "fail"))
+            operation.modifyRecordsResultBlock?(.failure(CommonError(description: "fail")))
         }
         do {
-            try self.utils.updateRecords(records: records, localDb: true).wait(test: self, timeout: 10)
+            try await self.utils.updateRecords(records: records, localDb: true)
             XCTAssertTrue(false)
         } catch {
             XCTAssertEqual(error.localizedDescription, "fail")
@@ -165,7 +164,7 @@ class CloudKitSyncUtilsTests: XCTestCase {
         XCTAssertEqual(self.operations.localOperations.count, 1)
     }
 
-	func testFetchDatabaseChangesSuccessCombineNoTokenNoMoreComing() throws {
+	func testFetchDatabaseChangesSuccessCombineNoTokenNoMoreComing() async throws {
         let zoneIds = [CKRecordZone.ID(zoneName: "testZone1", ownerName: "testOwner"), CKRecordZone.ID(zoneName: "testZone2", ownerName: "testOwner"), CKRecordZone.ID(zoneName: "testZone3", ownerName: "testOwner")]
         let token = TestServerChangeToken(key: "test")
         self.operations.onAddOperation = { operation, localOperations, sharedOperations in
@@ -174,15 +173,15 @@ class CloudKitSyncUtilsTests: XCTestCase {
             for zoneId in zoneIds {
                 operation.recordZoneWithIDChangedBlock?(zoneId)
             }
-            operation.fetchDatabaseChangesCompletionBlock?(token, false, nil)
+            operation.fetchDatabaseChangesResultBlock?(.success((token!, false)))
         }
-        let zoneIdsResult = try self.utils.fetchDatabaseChanges(localDb: true).getValue(test: self, timeout: 10)
+        let zoneIdsResult = try await self.utils.fetchDatabaseChanges(localDb: true)
         XCTAssertEqual(self.operations.localOperations.count, 1)
         XCTAssertEqual(zoneIdsResult.elementsEqual(zoneIds), true)
         XCTAssertEqual((self.storage.getDbToken(localDb: true) as? TestServerChangeToken)?.key, "test")
     }
 
-	func testFetchDatabaseChangesSuccessCombineHasTokenNoMoreComing() throws {
+	func testFetchDatabaseChangesSuccessCombineHasTokenNoMoreComing() async throws {
         let zoneIds = [CKRecordZone.ID(zoneName: "testZone1", ownerName: "testOwner"), CKRecordZone.ID(zoneName: "testZone2", ownerName: "testOwner"), CKRecordZone.ID(zoneName: "testZone3", ownerName: "testOwner")]
         self.storage.setDbToken(localDb: true, token: TestServerChangeToken(key: "orig"))
         let token = TestServerChangeToken(key: "test")
@@ -192,15 +191,15 @@ class CloudKitSyncUtilsTests: XCTestCase {
             for zoneId in zoneIds {
                 operation.recordZoneWithIDChangedBlock?(zoneId)
             }
-            operation.fetchDatabaseChangesCompletionBlock?(token, false, nil)
+            operation.fetchDatabaseChangesResultBlock?(.success((token!, false)))
         }
-        let zoneIdsResult = try self.utils.fetchDatabaseChanges(localDb: true).getValue(test: self, timeout: 10)
+        let zoneIdsResult = try await self.utils.fetchDatabaseChanges(localDb: true)
         XCTAssertEqual(self.operations.localOperations.count, 1)
         XCTAssertEqual(zoneIdsResult.elementsEqual(zoneIds), true)
         XCTAssertEqual((self.storage.getDbToken(localDb: true) as? TestServerChangeToken)?.key, "test")
     }
 
-	func testFetchDatabaseChangesSuccessCombineNoTokenHasMoreComing() throws {
+	func testFetchDatabaseChangesSuccessCombineNoTokenHasMoreComing() async throws {
         let zoneIds = [CKRecordZone.ID(zoneName: "testZone1", ownerName: "testOwner"), CKRecordZone.ID(zoneName: "testZone2", ownerName: "testOwner"), CKRecordZone.ID(zoneName: "testZone3", ownerName: "testOwner")]
         let zoneIds2 = [CKRecordZone.ID(zoneName: "testZone4", ownerName: "testOwner"), CKRecordZone.ID(zoneName: "testZone5", ownerName: "testOwner"), CKRecordZone.ID(zoneName: "testZone6", ownerName: "testOwner")]
         let token = TestServerChangeToken(key: "test")
@@ -212,44 +211,44 @@ class CloudKitSyncUtilsTests: XCTestCase {
                 for zoneId in zoneIds {
                     operation.recordZoneWithIDChangedBlock?(zoneId)
                 }
-                operation.fetchDatabaseChangesCompletionBlock?(token, true, nil)
+                operation.fetchDatabaseChangesResultBlock?(.success((token!, true)))
             } else {
                 XCTAssertNotEqual(operation.previousServerChangeToken, nil)
                 for zoneId in zoneIds2 {
                     operation.recordZoneWithIDChangedBlock?(zoneId)
                 }
-                operation.fetchDatabaseChangesCompletionBlock?(token2, false, nil)
+                operation.fetchDatabaseChangesResultBlock?(.success((token2!, false)))
             }
         }
-        let zoneIdsResult = try self.utils.fetchDatabaseChanges(localDb: true).getValue(test: self, timeout: 10)
+        let zoneIdsResult = try await self.utils.fetchDatabaseChanges(localDb: true)
         XCTAssertEqual(self.operations.localOperations.count, 2)
         XCTAssertEqual(zoneIdsResult.elementsEqual(zoneIds + zoneIds2), true)
         XCTAssertEqual((self.storage.getDbToken(localDb: true) as? TestServerChangeToken)?.key, "test2")
     }
 
-	func testFetchDatabaseChangesCombineRetry() throws {
+	func testFetchDatabaseChangesCombineRetry() async throws {
         let zoneIds = [CKRecordZone.ID(zoneName: "testZone1", ownerName: "testOwner"), CKRecordZone.ID(zoneName: "testZone2", ownerName: "testOwner"), CKRecordZone.ID(zoneName: "testZone3", ownerName: "testOwner")]
         let token = TestServerChangeToken(key: "test")
         self.operations.onAddOperation = { operation, localOperations, sharedOperations in
             guard let operation = operation as? CKFetchDatabaseChangesOperation else { return }
             if localOperations.count == 1 {
                 XCTAssertEqual(operation.previousServerChangeToken, nil)
-                operation.fetchDatabaseChangesCompletionBlock?(nil, false, CommonError(description: "retry"))
+                operation.fetchDatabaseChangesResultBlock?(.failure(CommonError(description: "retry")))
             } else {
                 XCTAssertEqual(operation.previousServerChangeToken, nil)
                 for zoneId in zoneIds {
                     operation.recordZoneWithIDChangedBlock?(zoneId)
                 }
-                operation.fetchDatabaseChangesCompletionBlock?(token, false, nil)
+                operation.fetchDatabaseChangesResultBlock?(.success((token!, false)))
             }
         }
-        let zoneIdsResult = try self.utils.fetchDatabaseChanges(localDb: true).getValue(test: self, timeout: 10)
+        let zoneIdsResult = try await self.utils.fetchDatabaseChanges(localDb: true)
         XCTAssertEqual(self.operations.localOperations.count, 2)
         XCTAssertEqual(zoneIdsResult.elementsEqual(zoneIds), true)
         XCTAssertEqual((self.storage.getDbToken(localDb: true) as? TestServerChangeToken)?.key, "test")
     }
 
-	func testFetchDatabaseChangesCombineTokenReset() throws {
+	func testFetchDatabaseChangesCombineTokenReset() async throws {
         let zoneIds = [CKRecordZone.ID(zoneName: "testZone1", ownerName: "testOwner"), CKRecordZone.ID(zoneName: "testZone2", ownerName: "testOwner"), CKRecordZone.ID(zoneName: "testZone3", ownerName: "testOwner")]
         let token = TestServerChangeToken(key: "test")
         self.storage.setDbToken(localDb: true, token: TestServerChangeToken(key: "orig"))
@@ -257,28 +256,28 @@ class CloudKitSyncUtilsTests: XCTestCase {
             guard let operation = operation as? CKFetchDatabaseChangesOperation else { return }
             if localOperations.count == 1 {
                 XCTAssertNotEqual(operation.previousServerChangeToken, nil)
-                operation.fetchDatabaseChangesCompletionBlock?(nil, false, CommonError(description: "token"))
+                operation.fetchDatabaseChangesResultBlock?(.failure(CommonError(description: "token")))
             } else {
                 XCTAssertEqual(operation.previousServerChangeToken, nil)
                 for zoneId in zoneIds {
                     operation.recordZoneWithIDChangedBlock?(zoneId)
                 }
-                operation.fetchDatabaseChangesCompletionBlock?(token, false, nil)
+                operation.fetchDatabaseChangesResultBlock?(.success((token!, false)))
             }
         }
-        let zoneIdsResult = try self.utils.fetchDatabaseChanges(localDb: true).getValue(test: self, timeout: 10)
+        let zoneIdsResult = try await self.utils.fetchDatabaseChanges(localDb: true)
         XCTAssertEqual(self.operations.localOperations.count, 2)
         XCTAssertEqual(zoneIdsResult.elementsEqual(zoneIds), true)
         XCTAssertEqual((self.storage.getDbToken(localDb: true) as? TestServerChangeToken)?.key, "test")
     }
 
-	func testFetchDatabaseChangesCombineFail() {
+	func testFetchDatabaseChangesCombineFail() async {
         self.operations.onAddOperation = { operation, localOperations, sharedOperations in
             guard let operation = operation as? CKFetchDatabaseChangesOperation else { return }
-            operation.fetchDatabaseChangesCompletionBlock?(nil, false, CommonError(description: "fail"))
+            operation.fetchDatabaseChangesResultBlock?(.failure(CommonError(description: "fail")))
         }
         do {
-            _ = try self.utils.fetchDatabaseChanges(localDb: true).getValue(test: self, timeout: 10)
+            _ = try await self.utils.fetchDatabaseChanges(localDb: true)
             XCTAssertTrue(false)
         } catch {
             XCTAssertEqual(error.localizedDescription, "fail")
@@ -286,21 +285,7 @@ class CloudKitSyncUtilsTests: XCTestCase {
         XCTAssertEqual(self.operations.localOperations.count, 1)
     }
 
-	func testFetchDatabaseChangesCombineNoTokenError() {
-        self.operations.onAddOperation = { operation, localOperations, sharedOperations in
-            guard let operation = operation as? CKFetchDatabaseChangesOperation else { return }
-            operation.fetchDatabaseChangesCompletionBlock?(nil, false, nil)
-        }
-        do {
-            _ = try self.utils.fetchDatabaseChanges(localDb: true).getValue(test: self, timeout: 10)
-            XCTAssertTrue(false)
-        } catch {
-            XCTAssertEqual(error.localizedDescription, "iCloud token is empty")
-        }
-        XCTAssertEqual(self.operations.localOperations.count, 1)
-    }
-
-	func testFetchZoneChangesCombineSuccessNoTokenNoMore() throws {
+	func testFetchZoneChangesCombineSuccessNoTokenNoMore() async throws {
         let zoneIds = [CKRecordZone.ID(zoneName: "testZone1", ownerName: "testOwner"), CKRecordZone.ID(zoneName: "testZone2", ownerName: "testOwner"), CKRecordZone.ID(zoneName: "testZone3", ownerName: "testOwner")]
         let tokensMap = zoneIds.reduce(into: [CKRecordZone.ID: TestServerChangeToken](), {result, currentZone in
             let token = TestServerChangeToken(key: currentZone.zoneName)!
@@ -315,14 +300,14 @@ class CloudKitSyncUtilsTests: XCTestCase {
                 XCTAssertEqual(option?.previousServerChangeToken, nil)
             }
             for record in records {
-                operation.recordChangedBlock?(record)
+                operation.recordWasChangedBlock?(record.recordID, .success(record))
             }
             for zoneId in zoneIds {
-                operation.recordZoneFetchCompletionBlock?(zoneId, tokensMap[zoneId], nil, false, nil)
+                operation.recordZoneFetchResultBlock?(zoneId, .success((tokensMap[zoneId]!, nil, false)))
             }
-            operation.fetchRecordZoneChangesCompletionBlock?(nil)
+            operation.fetchRecordZoneChangesResultBlock?(.success(()))
         }
-		let resultRecords = try self.utils.fetchZoneChanges(zoneIds: zoneIds, localDb: true).getValue(test: self, timeout: 10)
+		let resultRecords = try await self.utils.fetchZoneChanges(zoneIds: zoneIds, localDb: true)
         XCTAssertEqual(self.operations.localOperations.count, 1)
         XCTAssertTrue(resultRecords.elementsEqual(records))
         for zoneId in zoneIds {
@@ -330,13 +315,13 @@ class CloudKitSyncUtilsTests: XCTestCase {
         }
     }
 
-	func testFetchZoneChangesCombineSuccessNoZones() throws {
-		let resultRecords = try self.utils.fetchZoneChanges(zoneIds: [], localDb: true).getValue(test: self, timeout: 10)
+	func testFetchZoneChangesCombineSuccessNoZones() async throws {
+		let resultRecords = try await self.utils.fetchZoneChanges(zoneIds: [], localDb: true)
         XCTAssertEqual(self.operations.localOperations.count, 0)
         XCTAssertEqual(resultRecords.count, 0)
     }
 
-	func testFetchZoneChangesCombineSuccessHasTokenNoMore() throws {
+	func testFetchZoneChangesCombineSuccessHasTokenNoMore() async throws {
         let zoneIds = [CKRecordZone.ID(zoneName: "testZone1", ownerName: "testOwner"), CKRecordZone.ID(zoneName: "testZone2", ownerName: "testOwner"), CKRecordZone.ID(zoneName: "testZone3", ownerName: "testOwner")]
         for zoneId in zoneIds {
             let token = TestServerChangeToken(key: zoneId.zoneName + "prev")!
@@ -355,14 +340,14 @@ class CloudKitSyncUtilsTests: XCTestCase {
                 XCTAssertNotEqual(option?.previousServerChangeToken, nil)
             }
             for record in records {
-                operation.recordChangedBlock?(record)
+                operation.recordWasChangedBlock?(record.recordID, .success(record))
             }
             for zoneId in zoneIds {
-                operation.recordZoneFetchCompletionBlock?(zoneId, tokensMap[zoneId], nil, false, nil)
+                operation.recordZoneFetchResultBlock?(zoneId, .success((tokensMap[zoneId]!, nil, false)))
             }
-            operation.fetchRecordZoneChangesCompletionBlock?(nil)
+            operation.fetchRecordZoneChangesResultBlock?(.success(()))
         }
-        let resultRecords = try self.utils.fetchZoneChanges(zoneIds: zoneIds, localDb: true).getValue(test: self, timeout: 10)
+        let resultRecords = try await self.utils.fetchZoneChanges(zoneIds: zoneIds, localDb: true)
         XCTAssertEqual(self.operations.localOperations.count, 1)
         XCTAssertTrue(resultRecords.elementsEqual(records))
         for zoneId in zoneIds {
@@ -370,7 +355,7 @@ class CloudKitSyncUtilsTests: XCTestCase {
         }
     }
 
-	func testFetchZoneChangesCombineSuccessNoTokenHasMore() throws {
+	func testFetchZoneChangesCombineSuccessNoTokenHasMore() async throws {
         let zoneIds = [CKRecordZone.ID(zoneName: "testZone1", ownerName: "testOwner"), CKRecordZone.ID(zoneName: "testZone2", ownerName: "testOwner"), CKRecordZone.ID(zoneName: "testZone3", ownerName: "testOwner")]
         let tokensMap = zoneIds.reduce(into: [CKRecordZone.ID: TestServerChangeToken](), {result, currentZone in
             let token = TestServerChangeToken(key: currentZone.zoneName)!
@@ -391,12 +376,12 @@ class CloudKitSyncUtilsTests: XCTestCase {
                     XCTAssertEqual(option?.previousServerChangeToken, nil)
                 }
                 for record in records {
-                    operation.recordChangedBlock?(record)
+                    operation.recordWasChangedBlock?(record.recordID, .success(record))
                 }
                 for zoneId in zoneIds {
-                    operation.recordZoneFetchCompletionBlock?(zoneId, tokensMap[zoneId], nil, true, nil)
+                    operation.recordZoneFetchResultBlock?(zoneId, .success((tokensMap[zoneId]!, nil, true)))
                 }
-                operation.fetchRecordZoneChangesCompletionBlock?(nil)
+                operation.fetchRecordZoneChangesResultBlock?(.success(()))
             } else {
                 for zoneId in zoneIds {
                     let option = operation.configurationsByRecordZoneID?[zoneId]
@@ -404,15 +389,15 @@ class CloudKitSyncUtilsTests: XCTestCase {
                     XCTAssertNotEqual(option?.previousServerChangeToken, nil)
                 }
                 for record in records2 {
-                    operation.recordChangedBlock?(record)
+                    operation.recordWasChangedBlock?(record.recordID, .success(record))
                 }
                 for zoneId in zoneIds {
-                    operation.recordZoneFetchCompletionBlock?(zoneId, tokensMap2[zoneId], nil, false, nil)
+                    operation.recordZoneFetchResultBlock?(zoneId, .success((tokensMap2[zoneId]!, nil, false)))
                 }
-                operation.fetchRecordZoneChangesCompletionBlock?(nil)
+                operation.fetchRecordZoneChangesResultBlock?(.success(()))
             }
         }
-        let resultRecords = try self.utils.fetchZoneChanges(zoneIds: zoneIds, localDb: true).getValue(test: self, timeout: 10)
+        let resultRecords = try await self.utils.fetchZoneChanges(zoneIds: zoneIds, localDb: true)
         XCTAssertEqual(self.operations.localOperations.count, 2)
         XCTAssertTrue(resultRecords.elementsEqual(records + records2))
         for zoneId in zoneIds {
@@ -420,7 +405,7 @@ class CloudKitSyncUtilsTests: XCTestCase {
         }
     }
 
-	func testFetchZoneChangesCombineSuccessResetToken() throws {
+	func testFetchZoneChangesCombineSuccessResetToken() async throws {
         let zoneIds = [CKRecordZone.ID(zoneName: "testZone1", ownerName: "testOwner"), CKRecordZone.ID(zoneName: "testZone2", ownerName: "testOwner"), CKRecordZone.ID(zoneName: "testZone3", ownerName: "testOwner")]
         let tokensMap = zoneIds.reduce(into: [CKRecordZone.ID: TestServerChangeToken](), {result, currentZone in
             let token = TestServerChangeToken(key: currentZone.zoneName)!
@@ -440,9 +425,9 @@ class CloudKitSyncUtilsTests: XCTestCase {
                     XCTAssertNotEqual(option?.previousServerChangeToken, nil)
                 }
                 for zoneId in zoneIds {
-                    operation.recordZoneFetchCompletionBlock?(zoneId, tokensMap[zoneId], nil, true, CommonError(description: "token"))
+                    operation.recordZoneFetchResultBlock?(zoneId, .failure(CommonError(description: "token")))
                 }
-                operation.fetchRecordZoneChangesCompletionBlock?(CommonError(description: "token"))
+                operation.fetchRecordZoneChangesResultBlock?(.failure(CommonError(description: "token")))
             } else {
                 for zoneId in zoneIds {
                     let option = operation.configurationsByRecordZoneID?[zoneId]
@@ -450,15 +435,15 @@ class CloudKitSyncUtilsTests: XCTestCase {
                     XCTAssertEqual(option?.previousServerChangeToken, nil)
                 }
                 for record in records {
-                    operation.recordChangedBlock?(record)
+                    operation.recordWasChangedBlock?(record.recordID, .success(record))
                 }
                 for zoneId in zoneIds {
-                    operation.recordZoneFetchCompletionBlock?(zoneId, tokensMap[zoneId], nil, false, nil)
+                    operation.recordZoneFetchResultBlock?(zoneId, .success((tokensMap[zoneId]!, nil, false)))
                 }
-                operation.fetchRecordZoneChangesCompletionBlock?(nil)
+                operation.fetchRecordZoneChangesResultBlock?(.success(()))
             }
         }
-        let resultRecords = try self.utils.fetchZoneChanges(zoneIds: zoneIds, localDb: true).getValue(test: self, timeout: 10)
+        let resultRecords = try await self.utils.fetchZoneChanges(zoneIds: zoneIds, localDb: true)
         XCTAssertEqual(self.operations.localOperations.count, 2)
         XCTAssertTrue(resultRecords.elementsEqual(records))
         for zoneId in zoneIds {
@@ -466,7 +451,7 @@ class CloudKitSyncUtilsTests: XCTestCase {
         }
     }
 
-	func testFetchZoneChangesCombineSuccessRetry() throws {
+	func testFetchZoneChangesCombineSuccessRetry() async throws {
         let zoneIds = [CKRecordZone.ID(zoneName: "testZone1", ownerName: "testOwner"), CKRecordZone.ID(zoneName: "testZone2", ownerName: "testOwner"), CKRecordZone.ID(zoneName: "testZone3", ownerName: "testOwner")]
         let tokensMap = zoneIds.reduce(into: [CKRecordZone.ID: TestServerChangeToken](), {result, currentZone in
             let token = TestServerChangeToken(key: currentZone.zoneName)!
@@ -482,9 +467,9 @@ class CloudKitSyncUtilsTests: XCTestCase {
                     XCTAssertEqual(option?.previousServerChangeToken, nil)
                 }
                 for zoneId in zoneIds {
-                    operation.recordZoneFetchCompletionBlock?(zoneId, tokensMap[zoneId], nil, true, CommonError(description: "retry"))
+                    operation.recordZoneFetchResultBlock?(zoneId, .failure(CommonError(description: "retry")))
                 }
-                operation.fetchRecordZoneChangesCompletionBlock?(CommonError(description: "retry"))
+                operation.fetchRecordZoneChangesResultBlock?(.failure(CommonError(description: "retry")))
             } else {
                 for zoneId in zoneIds {
                     let option = operation.configurationsByRecordZoneID?[zoneId]
@@ -492,15 +477,15 @@ class CloudKitSyncUtilsTests: XCTestCase {
                     XCTAssertEqual(option?.previousServerChangeToken, nil)
                 }
                 for record in records {
-                    operation.recordChangedBlock?(record)
+                    operation.recordWasChangedBlock?(record.recordID, .success(record))
                 }
                 for zoneId in zoneIds {
-                    operation.recordZoneFetchCompletionBlock?(zoneId, tokensMap[zoneId], nil, false, nil)
+                    operation.recordZoneFetchResultBlock?(zoneId, .success((tokensMap[zoneId]!, nil, false)))
                 }
-                operation.fetchRecordZoneChangesCompletionBlock?(nil)
+                operation.fetchRecordZoneChangesResultBlock?(.success(()))
             }
         }
-        let resultRecords = try self.utils.fetchZoneChanges(zoneIds: zoneIds, localDb: true).getValue(test: self, timeout: 10)
+        let resultRecords = try await self.utils.fetchZoneChanges(zoneIds: zoneIds, localDb: true)
         XCTAssertEqual(self.operations.localOperations.count, 2)
         XCTAssertTrue(resultRecords.elementsEqual(records))
         for zoneId in zoneIds {
@@ -508,14 +493,14 @@ class CloudKitSyncUtilsTests: XCTestCase {
         }
     }
 
-	func testFetchZoneChangesCombineFail() {
+	func testFetchZoneChangesCombineFail() async {
         let zoneIds = [CKRecordZone.ID(zoneName: "testZone1", ownerName: "testOwner"), CKRecordZone.ID(zoneName: "testZone2", ownerName: "testOwner"), CKRecordZone.ID(zoneName: "testZone3", ownerName: "testOwner")]
         self.operations.onAddOperation = { operation, localOperations, sharedOperations in
             guard let operation = operation as? CKFetchRecordZoneChangesOperation else { return }
-            operation.fetchRecordZoneChangesCompletionBlock?(CommonError(description: "fail"))
+            operation.fetchRecordZoneChangesResultBlock?(.failure(CommonError(description: "fail")))
         }
         do {
-			_ = try self.utils.fetchZoneChanges(zoneIds: zoneIds, localDb: true).getValue(test: self, timeout: 10)
+			_ = try await self.utils.fetchZoneChanges(zoneIds: zoneIds, localDb: true)
             XCTAssertTrue(false)
         } catch {
             XCTAssertEqual(error.localizedDescription, "fail")
