@@ -9,21 +9,14 @@
 import Foundation
 import CloudKit
 import SwiftyBeaver
-import Combine
 import DependencyInjection
 
 public protocol CloudKitSyncUtilsProtocol {
-	func fetchRecords(recordIds: [CKRecord.ID], localDb: Bool) -> AnyPublisher<CKRecord, Error>
     func fetchRecords(recordIds: [CKRecord.ID], localDb: Bool) async throws -> [CKRecord]
-	func updateSubscriptions(subscriptions: [CKSubscription], localDb: Bool) -> AnyPublisher<Void, Error>
     func updateSubscriptions(subscriptions: [CKSubscription], localDb: Bool) async throws
-	func updateRecords(records: [CKRecord], localDb: Bool) -> AnyPublisher<Void, Error>
     func updateRecords(records: [CKRecord], localDb: Bool) async throws
-	func fetchDatabaseChanges(localDb: Bool) -> AnyPublisher<[CKRecordZone.ID], Error>
     func fetchDatabaseChanges(localDb: Bool) async throws -> [CKRecordZone.ID]
-	func fetchZoneChanges(zoneIds: [CKRecordZone.ID], localDb: Bool) -> AnyPublisher<[CKRecord], Error>
     func fetchZoneChanges(zoneIds: [CKRecordZone.ID], localDb: Bool) async throws -> [CKRecord]
-	func acceptShare(metadata: CKShare.Metadata) -> AnyPublisher<(CKShare.Metadata, CKShare?), Error>
     func acceptShare(metadata: CKShare.Metadata) async throws -> CKShare
 }
 
@@ -58,10 +51,6 @@ public final class CloudKitSyncUtils: CloudKitSyncUtilsProtocol, DIDependency {
     }
 
 	public init() {}
-
-	public func fetchRecords(recordIds: [CKRecord.ID], localDb: Bool) -> AnyPublisher<CKRecord, Error> {
-		return CloudKitFetchRecordsPublisher(recordIds: recordIds, localDb: localDb).eraseToAnyPublisher()
-	}
     
     public func fetchRecords(recordIds: [CKRecord.ID], localDb: Bool) async throws -> [CKRecord] {
         guard !recordIds.isEmpty else { return [] }
@@ -96,10 +85,6 @@ public final class CloudKitSyncUtils: CloudKitSyncUtilsProtocol, DIDependency {
             }
         }
     }
-
-	public func updateSubscriptions(subscriptions: [CKSubscription], localDb: Bool) -> AnyPublisher<Void, Error> {
-		return CloudKitUpdateSubscriptionsPublisher(subscriptions: subscriptions, localDb: localDb).eraseToAnyPublisher()
-	}
     
     public func updateSubscriptions(subscriptions: [CKSubscription], localDb: Bool) async throws {
         guard !subscriptions.isEmpty else { return }
@@ -117,10 +102,6 @@ public final class CloudKitSyncUtils: CloudKitSyncUtilsProtocol, DIDependency {
             self?.operations.run(operation: operation, localDb: localDb)
         })
     }
-
-	public func updateRecords(records: [CKRecord], localDb: Bool) -> AnyPublisher<Void, Error> {
-		return CloudKitUpdateRecordsPublisher(records: records, localDb: localDb).eraseToAnyPublisher()
-	}
     
     public func updateRecords(records: [CKRecord], localDb: Bool) async throws {
         guard !records.isEmpty else { return }
@@ -147,10 +128,6 @@ public final class CloudKitSyncUtils: CloudKitSyncUtilsProtocol, DIDependency {
             }
         }
     }
-
-	public func fetchDatabaseChanges(localDb: Bool) -> AnyPublisher<[CKRecordZone.ID], Error> {
-		return CloudKitFetchDatabaseChangesPublisher(localDb: localDb).eraseToAnyPublisher()
-	}
     
     public func fetchDatabaseChanges(localDb: Bool) async throws -> [CKRecordZone.ID] {
         return try await fetchDatabaseChangesContinuous(localDb: localDb).0
@@ -197,10 +174,6 @@ public final class CloudKitSyncUtils: CloudKitSyncUtilsProtocol, DIDependency {
             }
         }
     }
-
-	public func fetchZoneChanges(zoneIds: [CKRecordZone.ID], localDb: Bool) -> AnyPublisher<[CKRecord], Error> {
-		return CloudKitFetchZoneChangesPublisher(zoneIds: zoneIds, localDb: localDb).eraseToAnyPublisher()
-	}
     
     public func fetchZoneChanges(zoneIds: [CKRecordZone.ID], localDb: Bool) async throws -> [CKRecord] {
         guard !zoneIds.isEmpty else { return [] }
@@ -273,10 +246,6 @@ public final class CloudKitSyncUtils: CloudKitSyncUtilsProtocol, DIDependency {
             }
         }
     }
-
-	public func acceptShare(metadata: CKShare.Metadata) -> AnyPublisher<(CKShare.Metadata, CKShare?), Error> {
-		return CloudKitAcceptSharePublisher(metadata: metadata).eraseToAnyPublisher()
-	}
     
     public func acceptShare(metadata: CKShare.Metadata) async throws -> CKShare {
         return try await withCheckedThrowingContinuation({[weak self] continuation in

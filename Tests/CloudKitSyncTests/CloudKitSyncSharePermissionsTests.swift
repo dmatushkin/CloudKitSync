@@ -15,7 +15,7 @@ import CommonError
 
 //swiftlint:disable type_body_length
 
-class CloudKitSyncSharePermissionsTests: XCTestCase {
+/*class CloudKitSyncSharePermissionsTests: XCTestCase {
 
 	private let operations = CloudKitSyncTestOperations()
 	private let utilsStub = CloudKitSyncUtilsStub()
@@ -329,3 +329,4 @@ class CloudKitSyncSharePermissionsTests: XCTestCase {
 		XCTAssertEqual(operationsCount, 4)
 	}
 }
+*/

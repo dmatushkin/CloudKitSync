@@ -9,7 +9,6 @@
 import Foundation
 import CloudKit
 import SwiftyBeaver
-import Combine
 import XCTest
 import CommonError
 @testable import CloudKitSync
@@ -34,105 +33,94 @@ class CloudKitSyncUtilsStub: CloudKitSyncUtilsProtocol {
         self.onFetchDatabaseChanges = nil
         self.onFetchZoneChanges = nil
     }
-
-	func fetchRecords(recordIds: [CKRecord.ID], localDb: Bool) -> AnyPublisher<CKRecord, Error> {
-		guard let onFetchRecords = self.onFetchRecords else { fatalError() }
-		return FetchRecordsTestPublisher(recordIds: recordIds, localDb: localDb, onFetchRecords: onFetchRecords).eraseToAnyPublisher()
-	}
     
     func fetchRecords(recordIds: [CKRecord.ID], localDb: Bool) async throws -> [CKRecord] {
-        return []
+        guard let onFetchRecords = self.onFetchRecords else { fatalError() }
+        return try await withCheckedThrowingContinuation({ continuation in
+            CloudKitSyncUtilsStub.operationsQueue.asyncAfter(deadline: .now() + 0.1) {
+                SwiftyBeaver.debug("about to fetch records \(recordIds)")
+                let result = onFetchRecords(recordIds, localDb)
+                if let error = result.1 {
+                    continuation.resume(throwing: error)
+                } else {
+                    continuation.resume(returning: result.0)
+                }
+            }
+        })
     }
-
-	func updateSubscriptions(subscriptions: [CKSubscription], localDb: Bool) -> AnyPublisher<Void, Error> {
-		guard let onUpdateSubscriptions = self.onUpdateSubscriptions else { fatalError() }
-		return UpdateSubscriptionsTestPublisher(subscriptions: subscriptions, localDb: localDb, onUpdateSubscriptions: onUpdateSubscriptions).eraseToAnyPublisher()
-	}
     
-    func updateSubscriptions(subscriptions: [CKSubscription], localDb: Bool) async throws {        
+    func updateSubscriptions(subscriptions: [CKSubscription], localDb: Bool) async throws {
+        guard let onUpdateSubscriptions = self.onUpdateSubscriptions else { fatalError() }
+        return try await withCheckedThrowingContinuation({ continuation in
+            CloudKitSyncUtilsStub.operationsQueue.asyncAfter(deadline: .now() + 0.1) {
+                SwiftyBeaver.debug("about to update subscriptions \(subscriptions)")
+                if let error = onUpdateSubscriptions(subscriptions, localDb) {
+                    continuation.resume(throwing: error)
+                } else {
+                    continuation.resume(returning: ())
+                }
+            }
+        })
     }
-
-	func updateRecords(records: [CKRecord], localDb: Bool) -> AnyPublisher<Void, Error> {
-		guard let onUpdateRecords = self.onUpdateRecords else { fatalError() }
-		return UpdateRecordsTestPublisher(records: records, localDb: localDb, onUpdateRecords: onUpdateRecords).eraseToAnyPublisher()
-	}
     
     func updateRecords(records: [CKRecord], localDb: Bool) async throws {
+        guard let onUpdateRecords = self.onUpdateRecords else { fatalError() }
+        return try await withCheckedThrowingContinuation({ continuation in
+            CloudKitSyncUtilsStub.operationsQueue.asyncAfter(deadline: .now() + 0.1) {
+                SwiftyBeaver.debug("about to update records \(records)")
+                if let error = onUpdateRecords(records, localDb) {
+                    continuation.resume(throwing: error)
+                } else {
+                    continuation.resume(returning: ())
+                }
+            }
+        })
     }
-
-	func fetchDatabaseChanges(localDb: Bool) -> AnyPublisher<[CKRecordZone.ID], Error> {
-		guard let onFetchDatabaseChanges = self.onFetchDatabaseChanges else { fatalError() }
-		return FetchDatabaseChangesTestPublisher(localDb: localDb, onFetchDatabaseChanges: onFetchDatabaseChanges).eraseToAnyPublisher()
-	}
     
     func fetchDatabaseChanges(localDb: Bool) async throws -> [CKRecordZone.ID] {
-        return []
+        guard let onFetchDatabaseChanges = self.onFetchDatabaseChanges else { fatalError() }
+        return try await withCheckedThrowingContinuation({ continuation in
+            CloudKitSyncUtilsStub.operationsQueue.asyncAfter(deadline: .now() + 0.1) {
+                SwiftyBeaver.debug("about to fetch database changes")
+                let result = onFetchDatabaseChanges(localDb)
+                if let error = result.1 {
+                    continuation.resume(throwing: error)
+                } else {
+                    continuation.resume(returning: result.0)
+                }
+            }
+        })
     }
 
-	func fetchZoneChanges(zoneIds: [CKRecordZone.ID], localDb: Bool) -> AnyPublisher<[CKRecord], Error> {
-		guard let onFetchZoneChanges = self.onFetchZoneChanges else { fatalError() }
-		return FetchZoneChangesTestPublisher(zoneIds: zoneIds, onFetchZoneChanges: onFetchZoneChanges).eraseToAnyPublisher()
-	}
-    
     func fetchZoneChanges(zoneIds: [CKRecordZone.ID], localDb: Bool) async throws -> [CKRecord] {
-        return []
+        guard let onFetchZoneChanges = self.onFetchZoneChanges else { fatalError() }
+        return try await withCheckedThrowingContinuation({ continuation in
+            CloudKitSyncUtilsStub.operationsQueue.asyncAfter(deadline: .now() + 0.1) {
+                SwiftyBeaver.debug("about to fetch zone changes \(zoneIds)")
+                let result = onFetchZoneChanges(zoneIds)
+                if let error = result.1 {
+                    continuation.resume(throwing: error)
+                } else {
+                    continuation.resume(returning: result.0)
+                }
+            }
+        })
     }
-
-	func acceptShare(metadata: CKShare.Metadata) -> AnyPublisher<(CKShare.Metadata, CKShare?), Error> {
-		guard let onAcceptShare = self.onAcceptShare else { fatalError() }
-		return CloudKitAcceptShareTestPublisher(metadata: metadata, onAcceptShare: onAcceptShare).eraseToAnyPublisher()
-	}
     
     func acceptShare(metadata: CKShare.Metadata) async throws -> CKShare {
-        throw CommonError(description: "Not implemented yet")
+        guard let onAcceptShare = self.onAcceptShare else { fatalError() }
+        return try await withCheckedThrowingContinuation({ continuation in
+            CloudKitSyncUtilsStub.operationsQueue.asyncAfter(deadline: .now() + 0.1) {
+                SwiftyBeaver.debug("about to accept share \(metadata)")
+                let result = onAcceptShare(metadata)
+                if let error = result.2 {
+                    continuation.resume(throwing: error)
+                } else {
+                    continuation.resume(returning: result.1!)
+                }
+            }
+        })
     }
-}
-
-extension Publisher {
-
-	func getValue(test: XCTestCase, timeout: TimeInterval) throws -> Self.Output {
-		var result: Self.Output?
-		var failure: Self.Failure?
-		let exp = test.expectation(description: "wait for values")
-		let cancellable = self.sink(receiveCompletion: { completion in
-			switch completion {
-			case .finished:
-				exp.fulfill()
-			case .failure(let error):
-				failure = error
-				exp.fulfill()
-			}
-		}, receiveValue: {output in
-			result = output
-		})
-		test.wait(for: [exp], timeout: timeout)
-		if let error = failure {
-			throw error
-		}
-		guard let out = result else { fatalError() }
-		_ = cancellable
-		return out
-	}
-
-	func wait(test: XCTestCase, timeout: TimeInterval) throws {
-		var failure: Self.Failure?
-		let exp = test.expectation(description: "wait for completion")
-		let cancellable = self.sink(receiveCompletion: { completion in
-			switch completion {
-			case .finished:
-				exp.fulfill()
-			case .failure(let error):
-				failure = error
-				exp.fulfill()
-			}
-		}, receiveValue: {_ in
-		})
-		test.wait(for: [exp], timeout: timeout)
-		if let error = failure {
-			throw error
-		}
-		_ = cancellable
-	}
 }
 
 class TokenTestArchiver: NSKeyedArchiver {

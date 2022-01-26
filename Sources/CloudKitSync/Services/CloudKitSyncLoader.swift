@@ -9,16 +9,15 @@
 import Foundation
 import CloudKit
 import DependencyInjection
-import Combine
 import CommonError
 
-/*public protocol CloudKitSyncLoaderProtocol {
+public protocol CloudKitSyncLoaderProtocol {
 
-	func loadShare<T>(metadata: CKShare.Metadata, itemType: T.Type) -> AnyPublisher<T, Error> where T: CloudKitSyncItemProtocol
-	func fetchChanges<T>(localDb: Bool, itemType: T.Type) -> AnyPublisher<[T], Error> where T: CloudKitSyncItemProtocol
+	func loadShare<T>(metadata: CKShare.Metadata, itemType: T.Type) async throws -> T where T: CloudKitSyncItemProtocol
+	func fetchChanges<T>(localDb: Bool, itemType: T.Type) async throws -> [T] where T: CloudKitSyncItemProtocol
 }
 
-public final class CloudKitSyncLoader: CloudKitSyncLoaderProtocol, DIDependency {
+/*public final class CloudKitSyncLoader: CloudKitSyncLoaderProtocol, DIDependency {
 
 	@Autowired
     private var cloudKitUtils: CloudKitSyncUtilsProtocol

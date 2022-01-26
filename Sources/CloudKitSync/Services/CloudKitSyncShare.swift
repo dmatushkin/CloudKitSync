@@ -9,7 +9,6 @@
 import Foundation
 import CloudKit
 import DependencyInjection
-import Combine
 import CommonError
 
 extension CKRecordZone {
@@ -24,12 +23,12 @@ extension CKRecordZone {
 }
 
 public protocol CloudKitSyncShareProtocol {
-	func setupUserPermissions(itemType: CloudKitSyncItemProtocol.Type) -> AnyPublisher<Void, Error>
-	func shareItem(item: CloudKitSyncItemProtocol, shareTitle: String, shareType: String) -> AnyPublisher<CKShare, Error>
-	func updateItem(item: CloudKitSyncItemProtocol) -> AnyPublisher<Void, Error>
+	func setupUserPermissions(itemType: CloudKitSyncItemProtocol.Type) async throws
+	func shareItem(item: CloudKitSyncItemProtocol, shareTitle: String, shareType: String) async throws -> CKShare
+	func updateItem(item: CloudKitSyncItemProtocol) async throws
 }
 
-public final class CloudKitSyncShare: CloudKitSyncShareProtocol, DIDependency {
+/*public final class CloudKitSyncShare: CloudKitSyncShareProtocol, DIDependency {
 
 	@Autowired
 	private var cloudKitUtils: CloudKitSyncUtilsProtocol
@@ -224,3 +223,4 @@ public final class CloudKitSyncShare: CloudKitSyncShareProtocol, DIDependency {
 		}).eraseToAnyPublisher()
 	}
 }
+*/
