@@ -36,7 +36,7 @@ public final class CloudKitSyncShare: CloudKitSyncShareProtocol, DIDependency {
 
 	public init() { }
 
-	private func processAccountStatus(status: CKAccountStatus) -> AnyPublisher<CKContainer_Application_PermissionStatus, Error> {
+    private func processAccountStatus(status: CKAccountStatus) -> AnyPublisher<CKContainer.ApplicationPermissionStatus, Error> {
 		switch status {
 		case .couldNotDetermine:
 			return Future { promise in
@@ -52,14 +52,18 @@ public final class CloudKitSyncShare: CloudKitSyncShareProtocol, DIDependency {
 			return Future { promise in
 				return promise(.failure(CommonError(description: "CloudKit account does not exist") as Error))
 			}.eraseToAnyPublisher()
-		@unknown default:
+        case .temporarilyUnavailable:
+            return Future { promise in
+                return promise(.failure(CommonError(description: "CloudKit is temporarily unavailable") as Error))
+            }.eraseToAnyPublisher()
+        @unknown default:
 			return Future { promise in
 				return promise(.failure(CommonError(description: "CloudKit account status unknown") as Error))
 			}.eraseToAnyPublisher()
 		}
 	}
 
-	private func processPermissionStatus(status: CKContainer_Application_PermissionStatus, itemType: CloudKitSyncItemProtocol.Type) -> AnyPublisher<Void, Error> {
+	private func processPermissionStatus(status: CKContainer.ApplicationPermissionStatus, itemType: CloudKitSyncItemProtocol.Type) -> AnyPublisher<Void, Error> {
 		switch status {
 		case .initialState:
 			return CloudKitRequestPermissionPublisher(permission: .userDiscoverability)
@@ -84,7 +88,7 @@ public final class CloudKitSyncShare: CloudKitSyncShareProtocol, DIDependency {
 	}
 
 	public func setupUserPermissions(itemType: CloudKitSyncItemProtocol.Type) -> AnyPublisher<Void, Error> {
-		return CloudKitAccountStatusPublisher().flatMap({[unowned self] accountStatus -> AnyPublisher<CKContainer_Application_PermissionStatus, Error> in
+		return CloudKitAccountStatusPublisher().flatMap({[unowned self] accountStatus -> AnyPublisher<CKContainer.ApplicationPermissionStatus, Error> in
 			self.processAccountStatus(status: accountStatus)
 			}).flatMap({[unowned self] permissionStatus -> AnyPublisher<Void, Error> in
 				self.processPermissionStatus(status: permissionStatus, itemType: itemType)

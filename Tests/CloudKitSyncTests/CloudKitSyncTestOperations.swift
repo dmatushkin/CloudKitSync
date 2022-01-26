@@ -20,8 +20,8 @@ class CloudKitSyncTestOperations: CloudKitSyncOperationsProtocol {
     var onAddOperation: ((CKDatabaseOperation, [CKDatabaseOperation], [CKDatabaseOperation]) -> Void)?
 	var onContainerOperation: ((CKOperation, [CKOperation]) -> Void)?
 	var onAccountStatus: (() -> (CKAccountStatus, Error?))?
-	var onPermissionStatus: ((CKContainer.ApplicationPermissions) -> (CKContainer_Application_PermissionStatus, Error?))?
-	var onRequestAppPermission: ((CKContainer.ApplicationPermissions) -> (CKContainer_Application_PermissionStatus, Error?))?
+	var onPermissionStatus: ((CKContainer.ApplicationPermissions) -> (CKContainer.ApplicationPermissionStatus, Error?))?
+	var onRequestAppPermission: ((CKContainer.ApplicationPermissions) -> (CKContainer.ApplicationPermissionStatus, Error?))?
 	var onSaveZone: ((CKRecordZone) -> (CKRecordZone?, Error?))?
 
     func cleanup() {

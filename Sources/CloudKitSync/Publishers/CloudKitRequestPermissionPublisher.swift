@@ -13,7 +13,7 @@ import DependencyInjection
 
 struct CloudKitRequestPermissionPublisher: Publisher {
 
-	private final class CloudKitSubscription<S: Subscriber>: Subscription where S.Input == CKContainer_Application_PermissionStatus, S.Failure == Error {
+	private final class CloudKitSubscription<S: Subscriber>: Subscription where S.Input == CKContainer.ApplicationPermissionStatus, S.Failure == Error {
 
 		@Autowired
 		private var operations: CloudKitSyncOperationsProtocol
@@ -42,7 +42,7 @@ struct CloudKitRequestPermissionPublisher: Publisher {
 		}
 	}
 
-	typealias Output = CKContainer_Application_PermissionStatus
+	typealias Output = CKContainer.ApplicationPermissionStatus
 	typealias Failure = Error
 	private let permission: CKContainer.ApplicationPermissions
 

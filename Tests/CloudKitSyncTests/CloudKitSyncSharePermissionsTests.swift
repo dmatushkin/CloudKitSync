@@ -60,7 +60,7 @@ class CloudKitSyncSharePermissionsTests: XCTestCase {
 		self.operations.onPermissionStatus = {permission in
 			operationsCount += 1
 			XCTAssertEqual(permission, .userDiscoverability)
-			return (CKContainer_Application_PermissionStatus.granted, nil)
+			return (CKContainer.ApplicationPermissionStatus.granted, nil)
 		}
 		self.operations.onSaveZone = { zone in
 			operationsCount += 1
@@ -84,12 +84,12 @@ class CloudKitSyncSharePermissionsTests: XCTestCase {
 		self.operations.onPermissionStatus = {permission in
 			operationsCount += 1
 			XCTAssertEqual(permission, .userDiscoverability)
-			return (CKContainer_Application_PermissionStatus.initialState, nil)
+			return (CKContainer.ApplicationPermissionStatus.initialState, nil)
 		}
 		self.operations.onRequestAppPermission = { permission in
 			operationsCount += 1
 			XCTAssertEqual(permission, .userDiscoverability)
-			return (CKContainer_Application_PermissionStatus.granted, nil)
+			return (CKContainer.ApplicationPermissionStatus.granted, nil)
 		}
 		self.operations.onSaveZone = { zone in
 			operationsCount += 1
@@ -173,7 +173,7 @@ class CloudKitSyncSharePermissionsTests: XCTestCase {
 		self.operations.onPermissionStatus = {permission in
 			operationsCount += 1
 			XCTAssertEqual(permission, .userDiscoverability)
-			return (CKContainer_Application_PermissionStatus.couldNotComplete, nil)
+			return (CKContainer.ApplicationPermissionStatus.couldNotComplete, nil)
 		}
 		do {
 			_ = try cloudShare.setupUserPermissions(itemType: TestShoppingList.self).getValue(test: self, timeout: 10)
@@ -193,7 +193,7 @@ class CloudKitSyncSharePermissionsTests: XCTestCase {
 		self.operations.onPermissionStatus = {permission in
 			operationsCount += 1
 			XCTAssertEqual(permission, .userDiscoverability)
-			return (CKContainer_Application_PermissionStatus.denied, nil)
+			return (CKContainer.ApplicationPermissionStatus.denied, nil)
 		}
 		do {
 			_ = try cloudShare.setupUserPermissions(itemType: TestShoppingList.self).getValue(test: self, timeout: 10)
@@ -213,7 +213,7 @@ class CloudKitSyncSharePermissionsTests: XCTestCase {
 		self.operations.onPermissionStatus = {permission in
 			operationsCount += 1
 			XCTAssertEqual(permission, .userDiscoverability)
-			return (CKContainer_Application_PermissionStatus.denied, CommonError(description: "test error") as Error)
+			return (CKContainer.ApplicationPermissionStatus.denied, CommonError(description: "test error") as Error)
 		}
 		do {
 			_ = try cloudShare.setupUserPermissions(itemType: TestShoppingList.self).getValue(test: self, timeout: 10)
@@ -233,12 +233,12 @@ class CloudKitSyncSharePermissionsTests: XCTestCase {
 		self.operations.onPermissionStatus = {permission in
 			operationsCount += 1
 			XCTAssertEqual(permission, .userDiscoverability)
-			return (CKContainer_Application_PermissionStatus.initialState, nil)
+			return (CKContainer.ApplicationPermissionStatus.initialState, nil)
 		}
 		self.operations.onRequestAppPermission = { permission in
 			operationsCount += 1
 			XCTAssertEqual(permission, .userDiscoverability)
-			return (CKContainer_Application_PermissionStatus.couldNotComplete, nil)
+			return (CKContainer.ApplicationPermissionStatus.couldNotComplete, nil)
 		}
 		do {
 			_ = try cloudShare.setupUserPermissions(itemType: TestShoppingList.self).getValue(test: self, timeout: 10)
@@ -258,12 +258,12 @@ class CloudKitSyncSharePermissionsTests: XCTestCase {
 		self.operations.onPermissionStatus = {permission in
 			operationsCount += 1
 			XCTAssertEqual(permission, .userDiscoverability)
-			return (CKContainer_Application_PermissionStatus.initialState, nil)
+			return (CKContainer.ApplicationPermissionStatus.initialState, nil)
 		}
 		self.operations.onRequestAppPermission = { permission in
 			operationsCount += 1
 			XCTAssertEqual(permission, .userDiscoverability)
-			return (CKContainer_Application_PermissionStatus.denied, nil)
+			return (CKContainer.ApplicationPermissionStatus.denied, nil)
 		}
 		do {
 			_ = try cloudShare.setupUserPermissions(itemType: TestShoppingList.self).getValue(test: self, timeout: 10)
@@ -283,12 +283,12 @@ class CloudKitSyncSharePermissionsTests: XCTestCase {
 		self.operations.onPermissionStatus = {permission in
 			operationsCount += 1
 			XCTAssertEqual(permission, .userDiscoverability)
-			return (CKContainer_Application_PermissionStatus.initialState, nil)
+			return (CKContainer.ApplicationPermissionStatus.initialState, nil)
 		}
 		self.operations.onRequestAppPermission = { permission in
 			operationsCount += 1
 			XCTAssertEqual(permission, .userDiscoverability)
-			return (CKContainer_Application_PermissionStatus.denied, CommonError(description: "test error") as Error)
+			return (CKContainer.ApplicationPermissionStatus.denied, CommonError(description: "test error") as Error)
 		}
 		do {
 			_ = try cloudShare.setupUserPermissions(itemType: TestShoppingList.self).getValue(test: self, timeout: 10)
@@ -308,12 +308,12 @@ class CloudKitSyncSharePermissionsTests: XCTestCase {
 		self.operations.onPermissionStatus = {permission in
 			operationsCount += 1
 			XCTAssertEqual(permission, .userDiscoverability)
-			return (CKContainer_Application_PermissionStatus.initialState, nil)
+			return (CKContainer.ApplicationPermissionStatus.initialState, nil)
 		}
 		self.operations.onRequestAppPermission = { permission in
 			operationsCount += 1
 			XCTAssertEqual(permission, .userDiscoverability)
-			return (CKContainer_Application_PermissionStatus.granted, nil)
+			return (CKContainer.ApplicationPermissionStatus.granted, nil)
 		}
 		self.operations.onSaveZone = { zone in
 			operationsCount += 1
