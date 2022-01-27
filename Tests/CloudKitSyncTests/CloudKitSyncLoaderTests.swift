@@ -15,7 +15,7 @@ import CommonError
 
 //swiftlint:disable type_body_length function_body_length superfluous_disable_command
 
-/*class CloudKitSyncLoaderTests: XCTestCase {
+class CloudKitSyncLoaderTests: XCTestCase {
 
 	static var allTests = [
         ("testLoadShare", testLoadShare),
@@ -44,7 +44,7 @@ import CommonError
         self.utilsStub.cleanup()
     }
 
-	func testLoadShare() throws {
+	func testLoadShare() async throws {
         let metadata = TestShareMetadata()
         var operationsCounter: Int = 0
         self.utilsStub.onFetchRecords = { recordIds, localDb -> ([CKRecord], Error?) in
@@ -80,9 +80,9 @@ import CommonError
 		self.utilsStub.onAcceptShare = { testMetadata in
 			operationsCounter += 1
 			XCTAssertEqual(testMetadata, metadata)
-			return (testMetadata, nil, nil)
+			return (testMetadata, CKShare(recordZoneID: CKRecordZone.ID(zoneName: "testRecordZone", ownerName: "testRecordOwner")), nil)
 		}
-		let shoppingList = try self.cloudLoader.loadShare(metadata: metadata, itemType: TestShoppingList.self).getValue(test: self, timeout: 10)
+		let shoppingList = try await self.cloudLoader.loadShare(metadata: metadata, itemType: TestShoppingList.self)
         XCTAssertEqual(shoppingList.name, "Test Shopping List")
         XCTAssertEqual(shoppingList.ownerName, "testRecordOwner")
         XCTAssertEqual(shoppingList.recordId, "testShareRecord")
@@ -108,7 +108,7 @@ import CommonError
         }
     }
 
-	func testLoadShareFailAccept() throws {
+	func testLoadShareFailAccept() async throws {
         let metadata = TestShareMetadata()
         var operationsCounter: Int = 0
         self.utilsStub.onFetchRecords = { recordIds, localDb -> ([CKRecord], Error?) in
@@ -122,7 +122,7 @@ import CommonError
 			return (testMetadata, nil, CommonError(description: "test error") as Error)
 		}
 		do {
-			_ = try self.cloudLoader.loadShare(metadata: metadata, itemType: TestShoppingList.self).getValue(test: self, timeout: 10)
+			_ = try await self.cloudLoader.loadShare(metadata: metadata, itemType: TestShoppingList.self)
 			XCTAssertFalse(true, "should not be here")
 		} catch {
 			XCTAssertEqual(error.localizedDescription, "test error")
@@ -131,7 +131,7 @@ import CommonError
 		XCTAssertEqual(operationsCounter, 1)
     }
 
-	func testLoadShareFailFetchList() throws {
+	func testLoadShareFailFetchList() async throws {
         let metadata = TestShareMetadata()
         var operationsCounter: Int = 0
         self.utilsStub.onFetchRecords = { recordIds, localDb -> ([CKRecord], Error?) in
@@ -146,10 +146,10 @@ import CommonError
 		self.utilsStub.onAcceptShare = { testMetadata in
 			operationsCounter += 1
 			XCTAssertEqual(testMetadata, metadata)
-			return (testMetadata, nil, nil)
+			return (testMetadata, CKShare(recordZoneID: CKRecordZone.ID(zoneName: "testRecordZone", ownerName: "testRecordOwner")), nil)
 		}
 		do {
-			_ = try self.cloudLoader.loadShare(metadata: metadata, itemType: TestShoppingList.self).getValue(test: self, timeout: 10)
+			_ = try await self.cloudLoader.loadShare(metadata: metadata, itemType: TestShoppingList.self)
 			XCTAssertFalse(true, "should not be here")
 		} catch {
 			XCTAssertEqual(error.localizedDescription, "test error")
@@ -158,7 +158,7 @@ import CommonError
 		XCTAssertEqual(operationsCounter, 2)
     }
 
-	func testLoadShareFailFetchItems() throws {
+	func testLoadShareFailFetchItems() async throws {
         let metadata = TestShareMetadata()
         var operationsCounter: Int = 0
         self.utilsStub.onFetchRecords = { recordIds, localDb -> ([CKRecord], Error?) in
@@ -185,10 +185,10 @@ import CommonError
 		self.utilsStub.onAcceptShare = { testMetadata in
 			operationsCounter += 1
 			XCTAssertEqual(testMetadata, metadata)
-			return (testMetadata, nil, nil)
+			return (testMetadata, CKShare(recordZoneID: CKRecordZone.ID(zoneName: "testRecordZone", ownerName: "testRecordOwner")), nil)
 		}
 		do {
-			_ = try self.cloudLoader.loadShare(metadata: metadata, itemType: TestShoppingList.self).getValue(test: self, timeout: 10)
+			_ = try await self.cloudLoader.loadShare(metadata: metadata, itemType: TestShoppingList.self)
 			XCTAssertFalse(true, "should not be here")
 		} catch {
 			XCTAssertEqual(error.localizedDescription, "test error")
@@ -197,7 +197,7 @@ import CommonError
 		XCTAssertEqual(operationsCounter, 3)
     }
 
-	func testFetchChangesLocal() throws {
+	func testFetchChangesLocal() async throws {
 		var operationsCounter: Int = 0
 		self.utilsStub.onFetchDatabaseChanges = { localDb -> ([CKRecordZone.ID], Error?) in
 			operationsCounter += 1
@@ -249,7 +249,7 @@ import CommonError
 			return ([listRecord1, listItem11, listItem12, listRecord2, listItem21, listItem22, listRecord3], nil)
 		}
 
-		let shoppingLists = try self.cloudLoader.fetchChanges(localDb: true, itemType: TestShoppingList.self).getValue(test: self, timeout: 10).sorted(by: { ($0.name ?? "") < ($1.name ?? "") })
+		let shoppingLists = try await self.cloudLoader.fetchChanges(localDb: true, itemType: TestShoppingList.self).sorted(by: { ($0.name ?? "") < ($1.name ?? "") })
 		let items1 = shoppingLists[0].items.sorted(by: {($0.goodName ?? "") < ($1.goodName ?? "")})
 		let items2 = shoppingLists[1].items.sorted(by: {($0.goodName ?? "") < ($1.goodName ?? "")})
 		let items3 = shoppingLists[2].items
@@ -287,7 +287,7 @@ import CommonError
 		XCTAssertEqual(operationsCounter, 2)
 	}
 
-	func testFetchChangesLocalFailOnDb() throws {
+	func testFetchChangesLocalFailOnDb() async throws {
 		var operationsCounter: Int = 0
 		self.utilsStub.onFetchDatabaseChanges = { localDb -> ([CKRecordZone.ID], Error?) in
 			operationsCounter += 1
@@ -300,7 +300,7 @@ import CommonError
 		}
 
 		do {
-			_ = try self.cloudLoader.fetchChanges(localDb: true, itemType: TestShoppingList.self).getValue(test: self, timeout: 10)
+			_ = try await self.cloudLoader.fetchChanges(localDb: true, itemType: TestShoppingList.self)
 			XCTAssertFalse(true, "should not be here")
 		} catch {
 			XCTAssertEqual(error.localizedDescription, "test error")
@@ -308,7 +308,7 @@ import CommonError
 		XCTAssertEqual(operationsCounter, 1)
 	}
 
-	func testFetchChangesLocalFailOnZone() throws {
+	func testFetchChangesLocalFailOnZone() async throws {
 		var operationsCounter: Int = 0
 		self.utilsStub.onFetchDatabaseChanges = { localDb -> ([CKRecordZone.ID], Error?) in
 			operationsCounter += 1
@@ -330,7 +330,7 @@ import CommonError
 		}
 
 		do {
-			_ = try self.cloudLoader.fetchChanges(localDb: true, itemType: TestShoppingList.self).getValue(test: self, timeout: 10)
+			_ = try await self.cloudLoader.fetchChanges(localDb: true, itemType: TestShoppingList.self)
 			XCTAssertFalse(true, "should not be here")
 		} catch {
 			XCTAssertEqual(error.localizedDescription, "test error")
@@ -338,7 +338,7 @@ import CommonError
 		XCTAssertEqual(operationsCounter, 2)
 	}
 
-	func testFetchChangesRemote() throws {
+	func testFetchChangesRemote() async throws {
 		var operationsCounter: Int = 0
 		self.utilsStub.onFetchDatabaseChanges = { localDb -> ([CKRecordZone.ID], Error?) in
 			operationsCounter += 1
@@ -383,7 +383,7 @@ import CommonError
 			return ([listRecord1, listItem11, listItem12, listRecord2, listItem21, listItem22], nil)
 		}
 
-		let shoppingLists = try self.cloudLoader.fetchChanges(localDb: false, itemType: TestShoppingList.self).getValue(test: self, timeout: 10)
+		let shoppingLists = try await self.cloudLoader.fetchChanges(localDb: false, itemType: TestShoppingList.self)
 		let items1 = shoppingLists[0].items.sorted(by: {($0.goodName ?? "") < ($1.goodName ?? "")})
 		let items2 = shoppingLists[1].items.sorted(by: {($0.goodName ?? "") < ($1.goodName ?? "")})
 		XCTAssertEqual(shoppingLists.count, 2)
@@ -410,4 +410,3 @@ import CommonError
 		XCTAssertEqual(operationsCounter, 2)
 	}
 }
-*/

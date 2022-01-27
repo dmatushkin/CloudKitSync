@@ -17,6 +17,10 @@ class TestShareMetadata: CKShare.Metadata {
     override var rootRecordID: CKRecord.ID {
         return CKRecord.ID(recordName: "testShareRecord", zoneID: CKRecordZone.ID(zoneName: "testRecordZone", ownerName: "testRecordOwner"))
     }
+    
+    override var hierarchicalRootRecordID: CKRecord.ID? {
+        return rootRecordID
+    }
 }
 
 class SharedRecord: CKRecord {
