@@ -15,7 +15,7 @@ import CommonError
 
 //swiftlint:disable type_body_length function_body_length file_length
 
-/*class CloudKitSyncShareTests: XCTestCase {
+class CloudKitSyncShareTests: XCTestCase {
 
 	private let utilsStub = CloudKitSyncUtilsStub()
 	private var cloudShare: CloudKitSyncShare!
@@ -53,7 +53,7 @@ import CommonError
 		self.utilsStub.cleanup()
 	}
 
-	func testShareLocalShoppingList() throws {
+	func testShareLocalShoppingList() async throws {
 
 		let testShoppingList = TestShoppingList()
 		let testShoppingItem1 = TestShoppingItem()
@@ -107,7 +107,7 @@ import CommonError
 				return nil
 			}
 		}
-		let share = try self.cloudShare.shareItem(item: testShoppingList, shareTitle: "Shopping List", shareType: "org.md.ShoppingManiac").getValue(test: self, timeout: 10)
+		let share = try await self.cloudShare.shareItem(item: testShoppingList, shareTitle: "Shopping List", shareType: "org.md.ShoppingManiac")
 		XCTAssertEqual(share[CKShare.SystemFieldKey.title] as? String, "Shopping List")
 		XCTAssertEqual(share[CKShare.SystemFieldKey.shareType] as? String, "org.md.ShoppingManiac")
 		XCTAssertEqual(recordsUpdateIteration, 2)
@@ -116,7 +116,7 @@ import CommonError
 		XCTAssertNotNil(testShoppingItem2.recordId)
 	}
 
-	func testShareLocalShoppingListFailOnUpdateList() throws {
+	func testShareLocalShoppingListFailOnUpdateList() async throws {
 
 		let testShoppingList = TestShoppingList()
 		let testShoppingItem1 = TestShoppingItem()
@@ -154,7 +154,7 @@ import CommonError
 			}
 		}
 		do {
-			_ = try self.cloudShare.shareItem(item: testShoppingList, shareTitle: "Shopping List", shareType: "org.md.ShoppingManiac").getValue(test: self, timeout: 10)
+			_ = try await self.cloudShare.shareItem(item: testShoppingList, shareTitle: "Shopping List", shareType: "org.md.ShoppingManiac")
 			XCTAssertTrue(false, "error should happened")
 		} catch {
 			XCTAssertEqual(error.localizedDescription, "test error")
@@ -162,7 +162,7 @@ import CommonError
 		XCTAssertEqual(recordsUpdateIteration, 1)
 	}
 
-	func testShareLocalShoppingListFailOnUpdateItems() throws {
+	func testShareLocalShoppingListFailOnUpdateItems() async throws {
 
 		let testShoppingList = TestShoppingList()
 		let testShoppingItem1 = TestShoppingItem()
@@ -217,7 +217,7 @@ import CommonError
 			}
 		}
 		do {
-			_ = try self.cloudShare.shareItem(item: testShoppingList, shareTitle: "Shopping List", shareType: "org.md.ShoppingManiac").getValue(test: self, timeout: 10)
+			_ = try await self.cloudShare.shareItem(item: testShoppingList, shareTitle: "Shopping List", shareType: "org.md.ShoppingManiac")
 			XCTAssertTrue(false, "error should happened")
 		} catch {
 			XCTAssertEqual(error.localizedDescription, "test error")
@@ -225,7 +225,7 @@ import CommonError
 		XCTAssertEqual(recordsUpdateIteration, 2)
 	}
 
-	func testUpdateLocalShoppingList() throws {
+	func testUpdateLocalShoppingList() async throws {
 		let testShoppingList = TestShoppingList()
 		let testShoppingItem1 = TestShoppingItem()
 		let testShoppingItem2 = TestShoppingItem()
@@ -277,14 +277,14 @@ import CommonError
 				return nil
 			}
 		}
-		_ = try self.cloudShare.updateItem(item: testShoppingList).getValue(test: self, timeout: 10)
+		_ = try await self.cloudShare.updateItem(item: testShoppingList)
 		XCTAssertEqual(recordsUpdateIteration, 2)
 		XCTAssertNotNil(testShoppingList.recordId)
 		XCTAssertNotNil(testShoppingItem1.recordId)
 		XCTAssertNotNil(testShoppingItem2.recordId)
 	}
 
-	func testUpdateLocalShoppingListFailOnUpdateList() throws {
+	func testUpdateLocalShoppingListFailOnUpdateList() async throws {
 		let testShoppingList = TestShoppingList()
 		let testShoppingItem1 = TestShoppingItem()
 		let testShoppingItem2 = TestShoppingItem()
@@ -320,7 +320,7 @@ import CommonError
 			}
 		}
 		do {
-			_ = try self.cloudShare.updateItem(item: testShoppingList).getValue(test: self, timeout: 10)
+			_ = try await self.cloudShare.updateItem(item: testShoppingList)
 			XCTAssertTrue(false, "error should happened")
 		} catch {
 			XCTAssertEqual(error.localizedDescription, "test error")
@@ -328,7 +328,7 @@ import CommonError
 		XCTAssertEqual(recordsUpdateIteration, 1)
 	}
 
-	func testUpdateLocalShoppingListFailOnUpdateItems() throws {
+	func testUpdateLocalShoppingListFailOnUpdateItems() async throws {
 		let testShoppingList = TestShoppingList()
 		let testShoppingItem1 = TestShoppingItem()
 		let testShoppingItem2 = TestShoppingItem()
@@ -381,7 +381,7 @@ import CommonError
 			}
 		}
 		do {
-			_ = try self.cloudShare.updateItem(item: testShoppingList).getValue(test: self, timeout: 10)
+			_ = try await self.cloudShare.updateItem(item: testShoppingList)
 			XCTAssertTrue(false, "error should happened")
 		} catch {
 			XCTAssertEqual(error.localizedDescription, "test error")
@@ -389,7 +389,7 @@ import CommonError
 		XCTAssertEqual(recordsUpdateIteration, 2)
 	}
 
-	func testUpdateRemoteShoppingListNoShare() throws {
+	func testUpdateRemoteShoppingListNoShare() async throws {
 		let testShoppingList = TestShoppingList()
 		let testShoppingItem1 = TestShoppingItem()
 		let testShoppingItem2 = TestShoppingItem()
@@ -472,7 +472,7 @@ import CommonError
 			}
 		}
 
-		_ = try self.cloudShare.updateItem(item: testShoppingList).getValue(test: self, timeout: 10)
+		_ = try await self.cloudShare.updateItem(item: testShoppingList)
 		XCTAssertEqual(recordsUpdateIteration, 2)
 		XCTAssertEqual(recordsFetchIteration, 2)
 		XCTAssertEqual(testShoppingList.recordId, "testListRecord")
@@ -480,7 +480,7 @@ import CommonError
 		XCTAssertEqual(testShoppingItem2.recordId, "testItemRecord2")
 	}
 
-	func testUpdateRemoteShoppingListNoShareFailOnFetchList() throws {
+	func testUpdateRemoteShoppingListNoShareFailOnFetchList() async throws {
 		let testShoppingList = TestShoppingList()
 		let testShoppingItem1 = TestShoppingItem()
 		let testShoppingItem2 = TestShoppingItem()
@@ -519,7 +519,7 @@ import CommonError
 		}
 
 		do {
-			_ = try self.cloudShare.updateItem(item: testShoppingList).getValue(test: self, timeout: 10)
+			_ = try await self.cloudShare.updateItem(item: testShoppingList)
 			XCTAssertTrue(false)
 		} catch {
 			XCTAssertEqual(error.localizedDescription, "test error")
@@ -528,7 +528,7 @@ import CommonError
 		XCTAssertEqual(recordsFetchIteration, 1)
 	}
 
-	func testUpdateRemoteShoppingListNoShareFailOnFetchItems() throws {
+	func testUpdateRemoteShoppingListNoShareFailOnFetchItems() async throws {
 		let testShoppingList = TestShoppingList()
 		let testShoppingItem1 = TestShoppingItem()
 		let testShoppingItem2 = TestShoppingItem()
@@ -574,7 +574,7 @@ import CommonError
 		}
 
 		do {
-			_ = try self.cloudShare.updateItem(item: testShoppingList).getValue(test: self, timeout: 10)
+			_ = try await self.cloudShare.updateItem(item: testShoppingList)
 			XCTAssertTrue(false)
 		} catch {
 			XCTAssertEqual(error.localizedDescription, "test error")
@@ -583,7 +583,7 @@ import CommonError
 		XCTAssertEqual(recordsFetchIteration, 2)
 	}
 
-	func testUpdateRemoteShoppingListNoShareFailOnUpdateList() throws {
+	func testUpdateRemoteShoppingListNoShareFailOnUpdateList() async throws {
 		let testShoppingList = TestShoppingList()
 		let testShoppingItem1 = TestShoppingItem()
 		let testShoppingItem2 = TestShoppingItem()
@@ -644,7 +644,7 @@ import CommonError
 		}
 
 		do {
-			_ = try self.cloudShare.updateItem(item: testShoppingList).getValue(test: self, timeout: 10)
+			_ = try await self.cloudShare.updateItem(item: testShoppingList)
 			XCTAssertTrue(false)
 		} catch {
 			XCTAssertEqual(error.localizedDescription, "test error")
@@ -653,7 +653,7 @@ import CommonError
 		XCTAssertEqual(recordsFetchIteration, 2)
 	}
 
-	func testUpdateRemoteShoppingListNoShareFailOnUpdateItems() throws {
+	func testUpdateRemoteShoppingListNoShareFailOnUpdateItems() async throws {
 		let testShoppingList = TestShoppingList()
 		let testShoppingItem1 = TestShoppingItem()
 		let testShoppingItem2 = TestShoppingItem()
@@ -734,7 +734,7 @@ import CommonError
 		}
 
 		do {
-			_ = try self.cloudShare.updateItem(item: testShoppingList).getValue(test: self, timeout: 10)
+			_ = try await self.cloudShare.updateItem(item: testShoppingList)
 			XCTAssertTrue(false)
 		} catch {
 			XCTAssertEqual(error.localizedDescription, "test error")
@@ -743,7 +743,7 @@ import CommonError
 		XCTAssertEqual(recordsFetchIteration, 2)
 	}
 
-	func testUpdateRemoteShoppingListWithShare() throws {
+	func testUpdateRemoteShoppingListWithShare() async throws {
 		let testShoppingList = TestShoppingList()
 		let testShoppingItem1 = TestShoppingItem()
 		let testShoppingItem2 = TestShoppingItem()
@@ -830,7 +830,7 @@ import CommonError
 				return ([], nil)
 			}
 		}
-		_ = try self.cloudShare.updateItem(item: testShoppingList).getValue(test: self, timeout: 10)
+		_ = try await self.cloudShare.updateItem(item: testShoppingList)
 		XCTAssertEqual(recordsUpdateIteration, 2)
 		XCTAssertEqual(recordsFetchIteration, 3)
 		XCTAssertEqual(testShoppingList.recordId, "testListRecord")
@@ -838,7 +838,7 @@ import CommonError
 		XCTAssertEqual(testShoppingItem2.recordId, "testItemRecord2")
 	}
 
-	func testUpdateRemoteShoppingListWithShareFailOnFetchList() throws {
+	func testUpdateRemoteShoppingListWithShareFailOnFetchList() async throws {
 		let testShoppingList = TestShoppingList()
 		let testShoppingItem1 = TestShoppingItem()
 		let testShoppingItem2 = TestShoppingItem()
@@ -872,7 +872,7 @@ import CommonError
 			}
 		}
 		do {
-			_ = try self.cloudShare.updateItem(item: testShoppingList).getValue(test: self, timeout: 10)
+			_ = try await self.cloudShare.updateItem(item: testShoppingList)
 			XCTAssertTrue(false, "error should happened")
 		} catch {
 			XCTAssertEqual(error.localizedDescription, "test error")
@@ -881,7 +881,7 @@ import CommonError
 		XCTAssertEqual(recordsFetchIteration, 1)
 	}
 
-	func testUpdateRemoteShoppingListWithShareFailOnFetchShare() throws {
+	func testUpdateRemoteShoppingListWithShareFailOnFetchShare() async throws {
 		let testShoppingList = TestShoppingList()
 		let testShoppingItem1 = TestShoppingItem()
 		let testShoppingItem2 = TestShoppingItem()
@@ -919,7 +919,7 @@ import CommonError
 			}
 		}
 		do {
-			_ = try self.cloudShare.updateItem(item: testShoppingList).getValue(test: self, timeout: 10)
+			_ = try await self.cloudShare.updateItem(item: testShoppingList)
 			XCTAssertTrue(false, "error should happened")
 		} catch {
 			XCTAssertEqual(error.localizedDescription, "test error")
@@ -928,7 +928,7 @@ import CommonError
 		XCTAssertEqual(recordsFetchIteration, 2)
 	}
 
-	func testUpdateRemoteShoppingListWithShareFailOnFetchItems() throws {
+	func testUpdateRemoteShoppingListWithShareFailOnFetchItems() async throws {
 		let testShoppingList = TestShoppingList()
 		let testShoppingItem1 = TestShoppingItem()
 		let testShoppingItem2 = TestShoppingItem()
@@ -976,7 +976,7 @@ import CommonError
 			}
 		}
 		do {
-			_ = try self.cloudShare.updateItem(item: testShoppingList).getValue(test: self, timeout: 10)
+			_ = try await self.cloudShare.updateItem(item: testShoppingList)
 			XCTAssertTrue(false, "error should happened")
 		} catch {
 			XCTAssertEqual(error.localizedDescription, "test error")
@@ -985,7 +985,7 @@ import CommonError
 		XCTAssertEqual(recordsFetchIteration, 3)
 	}
 
-	func testUpdateRemoteShoppingListWithShareFailOnUpdateList() throws {
+	func testUpdateRemoteShoppingListWithShareFailOnUpdateList() async throws {
 		let testShoppingList = TestShoppingList()
 		let testShoppingItem1 = TestShoppingItem()
 		let testShoppingItem2 = TestShoppingItem()
@@ -1050,7 +1050,7 @@ import CommonError
 			}
 		}
 		do {
-			_ = try self.cloudShare.updateItem(item: testShoppingList).getValue(test: self, timeout: 10)
+			_ = try await self.cloudShare.updateItem(item: testShoppingList)
 			XCTAssertTrue(false, "error should happened")
 		} catch {
 			XCTAssertEqual(error.localizedDescription, "test error")
@@ -1059,7 +1059,7 @@ import CommonError
 		XCTAssertEqual(recordsFetchIteration, 3)
 	}
 
-	func testUpdateRemoteShoppingListWithShareFailOnUpdateItems() throws {
+	func testUpdateRemoteShoppingListWithShareFailOnUpdateItems() async throws {
 		let testShoppingList = TestShoppingList()
 		let testShoppingItem1 = TestShoppingItem()
 		let testShoppingItem2 = TestShoppingItem()
@@ -1147,7 +1147,7 @@ import CommonError
 			}
 		}
 		do {
-			_ = try self.cloudShare.updateItem(item: testShoppingList).getValue(test: self, timeout: 10)
+			_ = try await self.cloudShare.updateItem(item: testShoppingList)
 			XCTAssertTrue(false, "error should happened")
 		} catch {
 			XCTAssertEqual(error.localizedDescription, "test error")
@@ -1156,4 +1156,3 @@ import CommonError
 		XCTAssertEqual(recordsFetchIteration, 3)
 	}
 }
-*/
