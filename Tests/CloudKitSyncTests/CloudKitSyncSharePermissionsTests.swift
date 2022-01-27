@@ -15,7 +15,7 @@ import CommonError
 
 //swiftlint:disable type_body_length
 
-/*class CloudKitSyncSharePermissionsTests: XCTestCase {
+class CloudKitSyncSharePermissionsTests: XCTestCase {
 
 	private let operations = CloudKitSyncTestOperations()
 	private let utilsStub = CloudKitSyncUtilsStub()
@@ -51,7 +51,7 @@ import CommonError
 		self.utilsStub.cleanup()
     }
 
-	func testShareSetupPermissionsGrantedSuccess() {
+	func testShareSetupPermissionsGrantedSuccess() async {
 		var operationsCount: Int = 0
 		self.operations.onAccountStatus = {
 			operationsCount += 1
@@ -68,14 +68,14 @@ import CommonError
 			return (zone, nil)
 		}
 		do {
-			_ = try cloudShare.setupUserPermissions(itemType: TestShoppingList.self).getValue(test: self, timeout: 10)
+			_ = try await cloudShare.setupUserPermissions(itemType: TestShoppingList.self)
 		} catch {
 			XCTAssert(false, "Should not be any errors here")
 		}
 		XCTAssertEqual(operationsCount, 3)
 	}
 
-	func testShareSetupPermissionsInitialStateSuccess() {
+	func testShareSetupPermissionsInitialStateSuccess() async {
 		var operationsCount: Int = 0
 		self.operations.onAccountStatus = {
 			operationsCount += 1
@@ -97,21 +97,21 @@ import CommonError
 			return (zone, nil)
 		}
 		do {
-			_ = try cloudShare.setupUserPermissions(itemType: TestShoppingList.self).getValue(test: self, timeout: 10)
+			_ = try await cloudShare.setupUserPermissions(itemType: TestShoppingList.self)
 		} catch {
 			XCTAssert(false, "Should not be any errors here")
 		}
 		XCTAssertEqual(operationsCount, 4)
 	}
 
-	func testShareSetupPermissionsAccountStatusCouldNotDetermine() {
+	func testShareSetupPermissionsAccountStatusCouldNotDetermine() async {
 		var operationsCount: Int = 0
 		self.operations.onAccountStatus = {
 			operationsCount += 1
 			return (CKAccountStatus.couldNotDetermine, nil)
 		}
 		do {
-			_ = try cloudShare.setupUserPermissions(itemType: TestShoppingList.self).getValue(test: self, timeout: 10)
+			_ = try await cloudShare.setupUserPermissions(itemType: TestShoppingList.self)
 			XCTAssert(false, "Error should happened")
 		} catch {
 			XCTAssertEqual(error.localizedDescription, "CloudKit account status incorrect")
@@ -119,14 +119,14 @@ import CommonError
 		XCTAssertEqual(operationsCount, 1)
 	}
 
-	func testShareSetupPermissionsAccountStatusRestricted() {
+	func testShareSetupPermissionsAccountStatusRestricted() async {
 		var operationsCount: Int = 0
 		self.operations.onAccountStatus = {
 			operationsCount += 1
 			return (CKAccountStatus.restricted, nil)
 		}
 		do {
-			_ = try cloudShare.setupUserPermissions(itemType: TestShoppingList.self).getValue(test: self, timeout: 10)
+			_ = try await cloudShare.setupUserPermissions(itemType: TestShoppingList.self)
 			XCTAssert(false, "Error should happened")
 		} catch {
 			XCTAssertEqual(error.localizedDescription, "CloudKit account is restricted")
@@ -134,14 +134,14 @@ import CommonError
 		XCTAssertEqual(operationsCount, 1)
 	}
 
-	func testShareSetupPermissionsAccountStatusNoAccount() {
+	func testShareSetupPermissionsAccountStatusNoAccount() async {
 		var operationsCount: Int = 0
 		self.operations.onAccountStatus = {
 			operationsCount += 1
 			return (CKAccountStatus.noAccount, nil)
 		}
 		do {
-			_ = try cloudShare.setupUserPermissions(itemType: TestShoppingList.self).getValue(test: self, timeout: 10)
+			_ = try await cloudShare.setupUserPermissions(itemType: TestShoppingList.self)
 			XCTAssert(false, "Error should happened")
 		} catch {
 			XCTAssertEqual(error.localizedDescription, "CloudKit account does not exist")
@@ -149,14 +149,14 @@ import CommonError
 		XCTAssertEqual(operationsCount, 1)
 	}
 
-	func testShareSetupPermissionsAccountStatusCustomError() {
+	func testShareSetupPermissionsAccountStatusCustomError() async {
 		var operationsCount: Int = 0
 		self.operations.onAccountStatus = {
 			operationsCount += 1
 			return (CKAccountStatus.noAccount, CommonError(description: "test error") as Error)
 		}
 		do {
-			_ = try cloudShare.setupUserPermissions(itemType: TestShoppingList.self).getValue(test: self, timeout: 10)
+			_ = try await cloudShare.setupUserPermissions(itemType: TestShoppingList.self)
 			XCTAssert(false, "Error should happened")
 		} catch {
 			XCTAssertEqual(error.localizedDescription, "test error")
@@ -164,7 +164,7 @@ import CommonError
 		XCTAssertEqual(operationsCount, 1)
 	}
 
-	func testShareSetupPermissionsPermissionStatusCouldNotComplete() {
+	func testShareSetupPermissionsPermissionStatusCouldNotComplete() async {
 		var operationsCount: Int = 0
 		self.operations.onAccountStatus = {
 			operationsCount += 1
@@ -176,7 +176,7 @@ import CommonError
 			return (CKContainer.ApplicationPermissionStatus.couldNotComplete, nil)
 		}
 		do {
-			_ = try cloudShare.setupUserPermissions(itemType: TestShoppingList.self).getValue(test: self, timeout: 10)
+			_ = try await cloudShare.setupUserPermissions(itemType: TestShoppingList.self)
 			XCTAssert(false, "Error should happened")
 		} catch {
 			XCTAssertEqual(error.localizedDescription, "CloudKit permission status could not complete")
@@ -184,7 +184,7 @@ import CommonError
 		XCTAssertEqual(operationsCount, 2)
 	}
 
-	func testShareSetupPermissionsPermissionStatusDenied() {
+	func testShareSetupPermissionsPermissionStatusDenied() async {
 		var operationsCount: Int = 0
 		self.operations.onAccountStatus = {
 			operationsCount += 1
@@ -196,7 +196,7 @@ import CommonError
 			return (CKContainer.ApplicationPermissionStatus.denied, nil)
 		}
 		do {
-			_ = try cloudShare.setupUserPermissions(itemType: TestShoppingList.self).getValue(test: self, timeout: 10)
+			_ = try await cloudShare.setupUserPermissions(itemType: TestShoppingList.self)
 			XCTAssert(false, "Error should happened")
 		} catch {
 			XCTAssertEqual(error.localizedDescription, "CloudKit permission status denied")
@@ -204,7 +204,7 @@ import CommonError
 		XCTAssertEqual(operationsCount, 2)
 	}
 
-	func testShareSetupPermissionsPermissionStatusCustomError() {
+	func testShareSetupPermissionsPermissionStatusCustomError() async {
 		var operationsCount: Int = 0
 		self.operations.onAccountStatus = {
 			operationsCount += 1
@@ -216,7 +216,7 @@ import CommonError
 			return (CKContainer.ApplicationPermissionStatus.denied, CommonError(description: "test error") as Error)
 		}
 		do {
-			_ = try cloudShare.setupUserPermissions(itemType: TestShoppingList.self).getValue(test: self, timeout: 10)
+			_ = try await cloudShare.setupUserPermissions(itemType: TestShoppingList.self)
 			XCTAssert(false, "Error should happened")
 		} catch {
 			XCTAssertEqual(error.localizedDescription, "test error")
@@ -224,7 +224,7 @@ import CommonError
 		XCTAssertEqual(operationsCount, 2)
 	}
 
-	func testShareSetupPermissionsRequestPermissionStatusCouldNotComplete() {
+	func testShareSetupPermissionsRequestPermissionStatusCouldNotComplete() async {
 		var operationsCount: Int = 0
 		self.operations.onAccountStatus = {
 			operationsCount += 1
@@ -241,7 +241,7 @@ import CommonError
 			return (CKContainer.ApplicationPermissionStatus.couldNotComplete, nil)
 		}
 		do {
-			_ = try cloudShare.setupUserPermissions(itemType: TestShoppingList.self).getValue(test: self, timeout: 10)
+			_ = try await cloudShare.setupUserPermissions(itemType: TestShoppingList.self)
 			XCTAssert(false, "Error should happened")
 		} catch {
 			XCTAssertEqual(error.localizedDescription, "CloudKit permission status could not complete")
@@ -249,7 +249,7 @@ import CommonError
 		XCTAssertEqual(operationsCount, 3)
 	}
 
-	func testShareSetupPermissionsRequestPermissionStatusDenied() {
+	func testShareSetupPermissionsRequestPermissionStatusDenied() async {
 		var operationsCount: Int = 0
 		self.operations.onAccountStatus = {
 			operationsCount += 1
@@ -266,7 +266,7 @@ import CommonError
 			return (CKContainer.ApplicationPermissionStatus.denied, nil)
 		}
 		do {
-			_ = try cloudShare.setupUserPermissions(itemType: TestShoppingList.self).getValue(test: self, timeout: 10)
+			_ = try await cloudShare.setupUserPermissions(itemType: TestShoppingList.self)
 			XCTAssert(false, "Error should happened")
 		} catch {
 			XCTAssertEqual(error.localizedDescription, "CloudKit permission status denied")
@@ -274,7 +274,7 @@ import CommonError
 		XCTAssertEqual(operationsCount, 3)
 	}
 
-	func testShareSetupPermissionsRequestPermissionStatusCustomError() {
+	func testShareSetupPermissionsRequestPermissionStatusCustomError() async {
 		var operationsCount: Int = 0
 		self.operations.onAccountStatus = {
 			operationsCount += 1
@@ -291,7 +291,7 @@ import CommonError
 			return (CKContainer.ApplicationPermissionStatus.denied, CommonError(description: "test error") as Error)
 		}
 		do {
-			_ = try cloudShare.setupUserPermissions(itemType: TestShoppingList.self).getValue(test: self, timeout: 10)
+			_ = try await cloudShare.setupUserPermissions(itemType: TestShoppingList.self)
 			XCTAssert(false, "Error should happened")
 		} catch {
 			XCTAssertEqual(error.localizedDescription, "test error")
@@ -299,7 +299,7 @@ import CommonError
 		XCTAssertEqual(operationsCount, 3)
 	}
 
-	func testShareSetupPermissionsSaveZoneCustomError() {
+	func testShareSetupPermissionsSaveZoneCustomError() async {
 		var operationsCount: Int = 0
 		self.operations.onAccountStatus = {
 			operationsCount += 1
@@ -321,7 +321,7 @@ import CommonError
 			return (zone, CommonError(description: "test error") as Error)
 		}
 		do {
-			_ = try cloudShare.setupUserPermissions(itemType: TestShoppingList.self).getValue(test: self, timeout: 10)
+			_ = try await cloudShare.setupUserPermissions(itemType: TestShoppingList.self)
 			XCTAssert(false, "Error should happened")
 		} catch {
 			XCTAssertEqual(error.localizedDescription, "test error")
@@ -329,4 +329,3 @@ import CommonError
 		XCTAssertEqual(operationsCount, 4)
 	}
 }
-*/

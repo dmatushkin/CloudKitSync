@@ -59,8 +59,7 @@ public final class CloudKitSyncLoader: CloudKitSyncLoaderProtocol, DIDependency 
     private func processChangesRecords(records: [CKRecord], itemType: CloudKitSyncItemProtocol.Type, parent: CloudKitSyncItemProtocol?, localDb: Bool) async throws -> [CloudKitSyncItemProtocol] {
         let itemRecords = records.filter({ $0.recordType == itemType.recordType && (parent == nil || $0.parent?.recordID.recordName == parent?.recordId) })
         guard !itemRecords.isEmpty else { return [] }
-        var result: [CloudKitSyncItemProtocol] = []
-        for record in itemRecords {
+        return try await itemRecords.asyncMap({ record in
             let item = try await itemType.store(record: record, isRemote: !localDb)
             if let parent = parent {
                 try await item.setParent(item: parent)
@@ -68,8 +67,7 @@ public final class CloudKitSyncLoader: CloudKitSyncLoaderProtocol, DIDependency 
             if itemType.hasDependentItems {
                 _ = try await self.processChangesRecords(records: records, itemType: itemType.dependentItemsType.self, parent: item, localDb: localDb)
             }
-            result.append(item)
-        }
-        return result
+            return item
+        })
     }
 }
