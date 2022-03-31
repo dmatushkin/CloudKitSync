@@ -27,6 +27,7 @@ extension Collection {
     public func asyncCompactMap<ElementOfResult>(_ transform: @escaping (Element) async throws -> ElementOfResult?) async rethrows -> [ElementOfResult] {
         return try await withThrowingTaskGroup(of: ElementOfResult?.self, returning: [ElementOfResult].self, body: { group in
             var result: [ElementOfResult] = []
+            result.reserveCapacity(self.count)
             for item in self {
                 group.addTask {
                     try await transform(item)
@@ -44,6 +45,7 @@ extension Collection {
     public func asyncMap<ElementOfResult>(_ transform: @escaping (Element) async throws -> ElementOfResult) async rethrows -> [ElementOfResult] {
         return try await withThrowingTaskGroup(of: ElementOfResult.self, returning: [ElementOfResult].self, body: { group in
             var result: [ElementOfResult] = []
+            result.reserveCapacity(self.count)
             for item in self {
                 group.addTask {
                     try await transform(item)

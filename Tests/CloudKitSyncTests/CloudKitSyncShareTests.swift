@@ -52,6 +52,22 @@ class CloudKitSyncShareTests: XCTestCase {
 		self.cloudShare = nil
 		self.utilsStub.cleanup()
 	}
+    
+    private static func compareRecordIds(records: [CKRecord.Reference], recordIds: [String]) -> Bool {
+        let names = records.map({ $0.recordID.recordName })
+        guard names.count == recordIds.count else { return false }
+        for name in names {
+            if !recordIds.contains(name) {
+                return false
+            }
+        }
+        for name in recordIds {
+            if !names.contains(name) {
+                return false
+            }
+        }
+        return true
+    }
 
 	func testShareLocalShoppingList() async throws {
 
@@ -80,8 +96,7 @@ class CloudKitSyncShareTests: XCTestCase {
 				XCTAssertEqual((listRecord["date"] as? Date)?.timeIntervalSinceReferenceDate, 602175855.0)
 				XCTAssertEqual(records[1].recordType, "cloudkit.share")
 				XCTAssertEqual(items.count, 2)
-				XCTAssertEqual(items[0].recordID.recordName, testShoppingItem1.recordId)
-				XCTAssertEqual(items[1].recordID.recordName, testShoppingItem2.recordId)
+                XCTAssertTrue(CloudKitSyncShareTests.compareRecordIds(records: items, recordIds: [testShoppingItem1.recordId, testShoppingItem2.recordId].compactMap({ $0 })))
 				return nil
 			} else if recordsUpdateIteration == 2 {
 				XCTAssertEqual(records.count, 2)
@@ -143,8 +158,7 @@ class CloudKitSyncShareTests: XCTestCase {
 				XCTAssertEqual((listRecord["date"] as? Date)?.timeIntervalSinceReferenceDate, 602175855.0)
 				XCTAssertEqual(records[1].recordType, "cloudkit.share")
 				XCTAssertEqual(items.count, 2)
-				XCTAssertEqual(items[0].recordID.recordName, testShoppingItem1.recordId)
-				XCTAssertEqual(items[1].recordID.recordName, testShoppingItem2.recordId)
+                XCTAssertTrue(CloudKitSyncShareTests.compareRecordIds(records: items, recordIds: [testShoppingItem1.recordId, testShoppingItem2.recordId].compactMap({ $0 })))
 				return CommonError(description: "test error")
 			} else if recordsUpdateIteration == 2 {
 				return nil
@@ -189,8 +203,7 @@ class CloudKitSyncShareTests: XCTestCase {
 				XCTAssertEqual((listRecord["date"] as? Date)?.timeIntervalSinceReferenceDate, 602175855.0)
 				XCTAssertEqual(records[1].recordType, "cloudkit.share")
 				XCTAssertEqual(items.count, 2)
-				XCTAssertEqual(items[0].recordID.recordName, testShoppingItem1.recordId)
-				XCTAssertEqual(items[1].recordID.recordName, testShoppingItem2.recordId)
+                XCTAssertTrue(CloudKitSyncShareTests.compareRecordIds(records: items, recordIds: [testShoppingItem1.recordId, testShoppingItem2.recordId].compactMap({ $0 })))
 				return nil
 			} else if recordsUpdateIteration == 2 {
 				XCTAssertEqual(records.count, 2)
@@ -250,8 +263,7 @@ class CloudKitSyncShareTests: XCTestCase {
 				XCTAssertEqual(listRecord["name"] as? String, "test name")
 				XCTAssertEqual((listRecord["date"] as? Date)?.timeIntervalSinceReferenceDate, 602175855.0)
 				XCTAssertEqual(items.count, 2)
-				XCTAssertEqual(items[0].recordID.recordName, testShoppingItem1.recordId)
-				XCTAssertEqual(items[1].recordID.recordName, testShoppingItem2.recordId)
+                XCTAssertTrue(CloudKitSyncShareTests.compareRecordIds(records: items, recordIds: [testShoppingItem1.recordId, testShoppingItem2.recordId].compactMap({ $0 })))
 				return nil
 			} else if recordsUpdateIteration == 2 {
 				XCTAssertEqual(records.count, 2)
@@ -309,8 +321,7 @@ class CloudKitSyncShareTests: XCTestCase {
 				XCTAssertEqual(listRecord["name"] as? String, "test name")
 				XCTAssertEqual((listRecord["date"] as? Date)?.timeIntervalSinceReferenceDate, 602175855.0)
 				XCTAssertEqual(items.count, 2)
-				XCTAssertEqual(items[0].recordID.recordName, testShoppingItem1.recordId)
-				XCTAssertEqual(items[1].recordID.recordName, testShoppingItem2.recordId)
+                XCTAssertTrue(CloudKitSyncShareTests.compareRecordIds(records: items, recordIds: [testShoppingItem1.recordId, testShoppingItem2.recordId].compactMap({ $0 })))
 				return CommonError(description: "test error")
 			} else if recordsUpdateIteration == 2 {
 				return nil
@@ -353,8 +364,7 @@ class CloudKitSyncShareTests: XCTestCase {
 				XCTAssertEqual(listRecord["name"] as? String, "test name")
 				XCTAssertEqual((listRecord["date"] as? Date)?.timeIntervalSinceReferenceDate, 602175855.0)
 				XCTAssertEqual(items.count, 2)
-				XCTAssertEqual(items[0].recordID.recordName, testShoppingItem1.recordId)
-				XCTAssertEqual(items[1].recordID.recordName, testShoppingItem2.recordId)
+                XCTAssertTrue(CloudKitSyncShareTests.compareRecordIds(records: items, recordIds: [testShoppingItem1.recordId, testShoppingItem2.recordId].compactMap({ $0 })))
 				return nil
 			} else if recordsUpdateIteration == 2 {
 				XCTAssertEqual(records.count, 2)
@@ -418,8 +428,7 @@ class CloudKitSyncShareTests: XCTestCase {
 				XCTAssertEqual(listRecord["name"] as? String, "test name")
 				XCTAssertEqual((listRecord["date"] as? Date)?.timeIntervalSinceReferenceDate, 602175855.0)
 				XCTAssertEqual(items.count, 2)
-				XCTAssertEqual(items[0].recordID.recordName, testShoppingItem1.recordId)
-				XCTAssertEqual(items[1].recordID.recordName, testShoppingItem2.recordId)
+                XCTAssertTrue(CloudKitSyncShareTests.compareRecordIds(records: items, recordIds: [testShoppingItem1.recordId, testShoppingItem2.recordId].compactMap({ $0 })))
 				return nil
 			} else if recordsUpdateIteration == 2 {
 				XCTAssertEqual(records.count, 2)
@@ -612,8 +621,7 @@ class CloudKitSyncShareTests: XCTestCase {
 				XCTAssertEqual(listRecord["name"] as? String, "test name")
 				XCTAssertEqual((listRecord["date"] as? Date)?.timeIntervalSinceReferenceDate, 602175855.0)
 				XCTAssertEqual(items.count, 2)
-				XCTAssertEqual(items[0].recordID.recordName, testShoppingItem1.recordId)
-				XCTAssertEqual(items[1].recordID.recordName, testShoppingItem2.recordId)
+                XCTAssertTrue(CloudKitSyncShareTests.compareRecordIds(records: items, recordIds: [testShoppingItem1.recordId, testShoppingItem2.recordId].compactMap({ $0 })))
 				return CommonError(description: "test error")
 			} else {
 				XCTAssertTrue(false)
@@ -682,8 +690,7 @@ class CloudKitSyncShareTests: XCTestCase {
 				XCTAssertEqual(listRecord["name"] as? String, "test name")
 				XCTAssertEqual((listRecord["date"] as? Date)?.timeIntervalSinceReferenceDate, 602175855.0)
 				XCTAssertEqual(items.count, 2)
-				XCTAssertEqual(items[0].recordID.recordName, testShoppingItem1.recordId)
-				XCTAssertEqual(items[1].recordID.recordName, testShoppingItem2.recordId)
+                XCTAssertTrue(CloudKitSyncShareTests.compareRecordIds(records: items, recordIds: [testShoppingItem1.recordId, testShoppingItem2.recordId].compactMap({ $0 })))
 				return nil
 			} else {
 				XCTAssertEqual(records.count, 2)
@@ -773,8 +780,7 @@ class CloudKitSyncShareTests: XCTestCase {
 				XCTAssertEqual((listRecord["date"] as? Date)?.timeIntervalSinceReferenceDate, 602175855.0)
 				XCTAssertEqual(records[1].recordType, "cloudkit.share")
 				XCTAssertEqual(items.count, 2)
-				XCTAssertEqual(items[0].recordID.recordName, testShoppingItem1.recordId)
-				XCTAssertEqual(items[1].recordID.recordName, testShoppingItem2.recordId)
+                XCTAssertTrue(CloudKitSyncShareTests.compareRecordIds(records: items, recordIds: [testShoppingItem1.recordId, testShoppingItem2.recordId].compactMap({ $0 })))
 				return nil
 			} else if recordsUpdateIteration == 2 {
 				XCTAssertEqual(records.count, 2)
@@ -1015,8 +1021,7 @@ class CloudKitSyncShareTests: XCTestCase {
 				XCTAssertEqual((listRecord["date"] as? Date)?.timeIntervalSinceReferenceDate, 602175855.0)
 				XCTAssertEqual(records[1].recordType, "cloudkit.share")
 				XCTAssertEqual(items.count, 2)
-				XCTAssertEqual(items[0].recordID.recordName, testShoppingItem1.recordId)
-				XCTAssertEqual(items[1].recordID.recordName, testShoppingItem2.recordId)
+                XCTAssertTrue(CloudKitSyncShareTests.compareRecordIds(records: items, recordIds: [testShoppingItem1.recordId, testShoppingItem2.recordId].compactMap({ $0 })))
 				return CommonError(description: "test error")
 			} else {
 				XCTAssertTrue(false)
@@ -1089,8 +1094,7 @@ class CloudKitSyncShareTests: XCTestCase {
 				XCTAssertEqual((listRecord["date"] as? Date)?.timeIntervalSinceReferenceDate, 602175855.0)
 				XCTAssertEqual(records[1].recordType, "cloudkit.share")
 				XCTAssertEqual(items.count, 2)
-				XCTAssertEqual(items[0].recordID.recordName, testShoppingItem1.recordId)
-				XCTAssertEqual(items[1].recordID.recordName, testShoppingItem2.recordId)
+                XCTAssertTrue(CloudKitSyncShareTests.compareRecordIds(records: items, recordIds: [testShoppingItem1.recordId, testShoppingItem2.recordId].compactMap({ $0 })))
 				return nil
 			} else if recordsUpdateIteration == 2 {
 				XCTAssertEqual(records.count, 2)
